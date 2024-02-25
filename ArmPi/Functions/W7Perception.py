@@ -13,6 +13,7 @@ import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
+
 class ObjectTracker:
     def __init__(self):
         self.target_color = ('red',)
@@ -98,7 +99,7 @@ class ObjectTracker:
                 rect = cv2.minAreaRect(areaMaxContour)
                 box = np.int0(cv2.boxPoints(rect))
 
-                self.roi = self.get_roi(box)
+                self.roi = self.get_roi_from_box(box)
                 self.get_roi = True
 
                 img_centerx, img_centery = self.get_center(rect, self.roi, self.size, self.square_length)
@@ -136,6 +137,9 @@ class ObjectTracker:
 
     def get_mask_roi(self, frame, roi, size):
         return frame
+
+    def get_roi_from_box(self, box):
+        return (0, 0)
 
     def get_center(self, rect, roi, size, square_length):
         return 0, 0
