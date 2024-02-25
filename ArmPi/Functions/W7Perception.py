@@ -27,11 +27,18 @@ __target_color = ('red',)
 
 # Function to find the contour with maximum area
 def getAreaMaxContour(contours):
-    # Implementation of this function is kept intact
-
-# Initialize arm position
-def initMove():
-    # Implementation of this function is kept intact
+    contour_area_temp = 0
+    contour_area_max = 0
+    area_max_contour = None
+ 
+    for c in contours:  # Iterate through all contours
+        contour_area_temp = math.fabs(cv2.contourArea(c))  # Calculate contour area
+        if contour_area_temp > contour_area_max:
+            contour_area_max = contour_area_temp
+            if contour_area_temp > 300:  # Only contours with an area greater than 300 are considered valid to filter out noise
+                area_max_contour = c
+ 
+    return area_max_contour, contour_area_max  # Return the largest contour
 
 # Function to set the target color
 def setTargetColor(target_color):
@@ -64,12 +71,6 @@ def run():
             key = cv2.waitKey(1)
             if key == 27:
                 break
-
-# Initialize arm position and start perception
-initMove()
-th = threading.Thread(target=run)
-th.setDaemon(True)
-th.start()
 
 # Main loop
 while True:
