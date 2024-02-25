@@ -96,7 +96,7 @@ def run(img):
     global world_X, world_Y
     global world_x, world_y
     global start_count_t1, t1
-    global start_pick_up, first_move
+  
  
     img_copy = img.copy()
     img_h, img_w = img.shape[:2]
@@ -109,7 +109,7 @@ def run(img):
     frame_resize = cv2.resize(img_copy, size, interpolation=cv2.INTER_NEAREST)
     frame_gb = cv2.GaussianBlur(frame_resize, (11, 11), 11)
     # If a certain area is recognized, keep detecting that area until there is none
-    if get_roi and start_pick_up:
+    if get_roi:
         get_roi = False
         frame_gb = getMaskROI(frame_gb, roi, size)
  
@@ -117,9 +117,8 @@ def run(img):
  
     area_max = 0
     areaMaxContour = 0
-    if not start_pick_up:
-        for i in color_range:
-            if i in __target_color:
+    for i in color_range:
+        if i in __target_color:
                 detect_color = i
                 frame_mask = cv2.inRange(frame_lab, color_range[detect_color][0], color_range[detect_color][1])  # Bitwise operation on the original image and mask
                 opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8))  # Opening operation
