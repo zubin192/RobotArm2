@@ -17,10 +17,12 @@ class ObjectTracker:
     def __init__(self):
         self.target_color = ('red',)
         self.color_range = {
-            'red': (np.array([0, 120, 70]), np.array([10, 255, 255])),
+            'red': (np.array([0, 120, 70]), np.array([10, 255, 255])),  # Lower and upper bounds for red color in HSV
             'blue': (np.array([100, 100, 100]), np.array([140, 255, 255])),
             'green': (np.array([35, 100, 100]), np.array([90, 255, 255]))
         }
+        # Other class attributes remain the same
+
         self.size = (640, 480)
         self.square_length = 60
         self.roi = ()
