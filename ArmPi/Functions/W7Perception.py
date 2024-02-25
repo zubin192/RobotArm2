@@ -13,6 +13,13 @@ import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
+range_rgb = {
+    'red': (0, 0, 255),
+    'blue': (255, 0, 0),
+    'green': (0, 255, 0),
+    'black': (0, 0, 0),
+    'white': (255, 255, 255),
+}
  
 __target_color = ('red',)
 # Set the detection color
