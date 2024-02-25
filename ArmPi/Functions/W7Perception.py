@@ -13,111 +13,111 @@ import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
-class ImageProcessor:
-    def __init__(self, target_color, size):
-        self.target_color = target_color
-        self.size = size
-        self.get_roi = False
-        self.start_pick_up = False
-        self.last_x, self.last_y = 0, 0
-        self.center_list = []
-        self.count = 0
-        self.start_count_t1 = True
-        self.t1 = time.time()
+if sys.version_info.major == 2:
+    print('Please run this program with python3!')
+    sys.exit(0)
 
-    def resize_and_blur(self, img):
-        frame_resize = cv2.resize(img, self.size, interpolation=cv2.INTER_NEAREST)
-        frame_gb = cv2.GaussianBlur(frame_resize, (11, 11), 11)
-        return frame_gb
+__target_color = ('red',)
 
-    def convert_to_lab(self, img):
-        return cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+# Set the detection color
+def setTargetColor(target_color):
+    global __target_color
+    __target_color = target_color
+    return (True, ())
 
-    def detect_color(self, img):
-        frame_mask = cv2.inRange(img, color_range[self.target_color][0], color_range[self.target_color][1])
-        opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8))
-        closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6, 6), np.uint8))
-        return closed
-    
-    def find_largest_contour(self, img):
-        contours = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
-        areaMaxContour, area_max = self.getAreaMaxContour(contours)
-        return areaMaxContour, area_max
-    
-    def getAreaMaxContour(self, contours):
-        contour_area_temp = 0
-        contour_area_max = 0
-        area_max_contour = None
+# Find the contour with the maximum area
+# Parameter is a list of contours to compare
+def getAreaMaxContour(contours):
+    contour_area_temp = 0
+    contour_area_max = 0
+    area_max_contour = None
 
-        for c in contours:  # Iterate through all contours
-            contour_area_temp = math.fabs(cv2.contourArea(c))  # Calculate contour area
-            if contour_area_temp > contour_area_max:
-                contour_area_max = contour_area_temp
-                if contour_area_temp > 300:  # Only contours with an area greater than 300 are considered valid to filter out noise
-                    area_max_contour = c
+    for c in contours:  # Iterate through all contours
+        contour_area_temp = math.fabs(cv2.contourArea(c))  # Calculate contour area
+        if contour_area_temp > contour_area_max:
+            contour_area_max = contour_area_temp
+            if contour_area_temp > 300:  # Only contours with an area greater than 300 are considered valid to filter out noise
+                area_max_contour = c
 
-        return area_max_contour, contour_area_max  # Return the largest contour
-    
-    def draw_and_label(self, img, areaMaxContour):
+    return area_max_contour, contour_area_max  # Return the largest contour
+
+rect = None
+size = (640, 480)
+rotation_angle = 0
+unreachable = False
+world_X, world_Y = 0, 0
+world_x, world_y = 0, 0
+
+# App initialization call
+def init():
+    print("ColorTracking Init")
+
+# App start call
+def start():
+    print("ColorTracking Start")
+
+# App stop call
+def stop():
+    print("ColorTracking Stop")
+
+# App exit call
+def exit():
+    print("ColorTracking Exit")
+
+def run(img):
+    global rect
+    global __target_color
+    global size
+    global rotation_angle
+    global world_X, world_Y
+    global world_x, world_y
+
+    img_copy = img.copy()
+    img_h, img_w = img.shape[:2]
+    cv2.line(img, (0, int(img_h / 2)), (img_w, int(img_h / 2)), (0, 0, 200), 1)
+    cv2.line(img, (int(img_w / 2), 0), (int(img_w / 2), img_h), (0, 0, 200), 1)
+
+    frame_resize = cv2.resize(img_copy, size, interpolation=cv2.INTER_NEAREST)
+    frame_gb = cv2.GaussianBlur(frame_resize, (11, 11), 11)
+
+    frame_lab = cv2.cvtColor(frame_gb, cv2.COLOR_BGR2LAB)  # Convert the image to LAB space
+
+    area_max = 0
+    areaMaxContour = 0
+    for i in color_range:
+        if i in __target_color:
+            detect_color = i
+            frame_mask = cv2.inRange(frame_lab, color_range[detect_color][0], color_range[detect_color][1])  # Bitwise operation on the original image and mask
+            opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8))  # Opening operation
+            closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6, 6), np.uint8))  # Closing operation
+            contours = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]  # Find contours
+            areaMaxContour, area_max = getAreaMaxContour(contours)  # Find the largest contour
+    if area_max > 2500:  # If the largest area is found
         rect = cv2.minAreaRect(areaMaxContour)
         box = np.int0(cv2.boxPoints(rect))
-        roi = getROI(box)
-        self.get_roi = True
-        img_centerx, img_centery = getCenter(rect, roi, self.size, square_length)
-        world_x, world_y = convertCoordinate(img_centerx, img_centery, self.size)
-        cv2.drawContours(img, [box], -1, range_rgb[self.target_color], 2)
+
+        img_centerx, img_centery = getCenter(rect, roi, size, square_length)  # Get the center coordinates of the block
+        world_x, world_y = convertCoordinate(img_centerx, img_centery, size)  # Convert to real-world coordinates
+
+        cv2.drawContours(img, [box], -1, range_rgb[detect_color], 2)
         cv2.putText(img, '(' + str(world_x) + ',' + str(world_y) + ')', (min(box[0, 0], box[2, 0]), box[2, 1] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, range_rgb[self.target_color], 1)
-        return img, world_x, world_y
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, range_rgb[detect_color], 1)  # Draw the center point
 
-    def process_image(self, img):
-        img_copy = self.resize_and_blur(img)
-        img_lab = self.convert_to_lab(img_copy)
-        detected = self.detect_color(img_lab)
-        areaMaxContour, area_max = self.find_largest_contour(detected)
-        if area_max > 2500:
-            img, world_x, world_y = self.draw_and_label(img, areaMaxContour)
-            distance = math.sqrt(pow(world_x - self.last_x, 2) + pow(world_y - self.last_y, 2))
-            self.last_x, self.last_y = world_x, world_y
-            if action_finish:
-                if distance < 0.3:
-                    self.center_list.extend((world_x, world_y))
-                    self.count += 1
-                    if self.start_count_t1:
-                        self.start_count_t1 = False
-                        self.t1 = time.time()
-                    if time.time() - self.t1 > 1.5:
-                        rotation_angle = rect[2]
-                        self.start_count_t1 = True
-                        world_X, world_Y = np.mean(np.array(self.center_list).reshape(self.count, 2), axis=0)
-                        self.count = 0
-                        self.center_list = []
-                        self.start_pick_up = True
-                else:
-                    self.t1 = time.time()
-                    self.start_count_t1 = True
-                    self.count = 0
-                    self.center_list = []
-        return img
+    return img
 
-def main():
-    # Initialize the camera
+if __name__ == '__main__':
+    init()
+    start()
     my_camera = Camera.Camera()
     my_camera.camera_open()
-
-    # Initialize the image processor with the target color and size
-    my_processor = ImageProcessor('red', (640, 480))
-
     while True:
         img = my_camera.frame
         if img is not None:
-            result = my_processor.process_image(img)
-            cv2.imshow('Result', result)
-            if cv2.waitKey(1) == 27:  # Press 'Esc' to exit
+            frame = img.copy()
+            Frame = run(frame)
+            cv2.imshow('Frame', Frame)
+            key = cv2.waitKey(1)
+            if key == 27:
                 break
-
-    cv2.destroyAllWindows()
     my_camera.camera_close()
-
-if __name__ == "__main__":
-    main()
+    cv2.destroyAllWindows()
