@@ -11,10 +11,12 @@ from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
+import numpy as np
 
 class ImageProcessor:
-    def __init__(self, target_color):
+    def __init__(self, target_color, size):
         self.target_color = target_color
+        self.size = size
         self.get_roi = False
         self.start_pick_up = False
         self.last_x, self.last_y = 0, 0
@@ -24,7 +26,7 @@ class ImageProcessor:
         self.t1 = time.time()
 
     def resize_and_blur(self, img):
-        frame_resize = cv2.resize(img, size, interpolation=cv2.INTER_NEAREST)
+        frame_resize = cv2.resize(img, self.size, interpolation=cv2.INTER_NEAREST)
         frame_gb = cv2.GaussianBlur(frame_resize, (11, 11), 11)
         return frame_gb
 
@@ -47,8 +49,8 @@ class ImageProcessor:
         box = np.int0(cv2.boxPoints(rect))
         roi = getROI(box)
         self.get_roi = True
-        img_centerx, img_centery = getCenter(rect, roi, size, square_length)
-        world_x, world_y = convertCoordinate(img_centerx, img_centery, size)
+        img_centerx, img_centery = getCenter(rect, roi, self.size, square_length)
+        world_x, world_y = convertCoordinate(img_centerx, img_centery, self.size)
         cv2.drawContours(img, [box], -1, range_rgb[self.target_color], 2)
         cv2.putText(img, '(' + str(world_x) + ',' + str(world_y) + ')', (min(box[0, 0], box[2, 0]), box[2, 1] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, range_rgb[self.target_color], 1)
@@ -83,15 +85,14 @@ class ImageProcessor:
                     self.count = 0
                     self.center_list = []
         return img
-    
 
 def main():
     # Initialize the camera
     my_camera = Camera.Camera()
     my_camera.camera_open()
 
-    # Initialize the image processor with the target color
-    my_processor = ImageProcessor('red')
+    # Initialize the image processor with the target color and size
+    my_processor = ImageProcessor('red', (640, 480))
 
     while True:
         img = my_camera.frame
