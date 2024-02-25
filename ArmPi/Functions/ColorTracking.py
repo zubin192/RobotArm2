@@ -11,6 +11,7 @@ from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
+import numpy as np
  
 if sys.version_info.major == 2:
     print('Please run this program with python3!')
