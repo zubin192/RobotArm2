@@ -13,6 +13,15 @@ import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 
 
+def init():
+    # Initialization code goes here
+    pass
+
+# Define the start function
+def start():
+    # Start code goes here
+    pass
+
 def run(img):
     global roi
     global rect
