@@ -39,11 +39,20 @@ class ImageProcessor:
         closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6, 6), np.uint8))
         return closed
 
-    def find_largest_contour(self, img):
-        contours = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
-        areaMaxContour, area_max = getAreaMaxContour(contours)
-        return areaMaxContour, area_max
-
+    def getAreaMaxContour(contours):
+        contour_area_temp = 0
+        contour_area_max = 0
+        area_max_contour = None
+    
+        for c in contours:  # Iterate through all contours
+            contour_area_temp = math.fabs(cv2.contourArea(c))  # Calculate contour area
+            if contour_area_temp > contour_area_max:
+                contour_area_max = contour_area_temp
+                if contour_area_temp > 300:  # Only contours with an area greater than 300 are considered valid to filter out noise
+                    area_max_contour = c
+    
+        return area_max_contour, contour_area_max  # Return the largest contour
+    
     def draw_and_label(self, img, areaMaxContour):
         rect = cv2.minAreaRect(areaMaxContour)
         box = np.int0(cv2.boxPoints(rect))
