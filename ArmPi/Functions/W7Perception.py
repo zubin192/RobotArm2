@@ -15,31 +15,23 @@ import numpy as np
 
 class ObjectTracker:
 
+    range_rgb = {
+        'red': (0, 0, 255),
+        'blue': (255, 0, 0),
+        'green': (0, 255, 0),
+        'black': (0, 0, 0),
+        'white': (255, 255, 255),
+    }
+
     def __init__(self):
         self.target_color = ('red',)
-        self.color_range = {
-            'red': (0, 0, 255),
-            'blue': (255, 0, 0),
-            'green': (0, 255, 0),
-            'black': (0, 0, 0),
-            'white': (255, 255, 255)
-        }
-        # Other class attributes remain the same
-
-
-        self.size = (640, 480)
-        self.square_length = 60
-        self.roi = ()
-        self.last_x, self.last_y = 0, 0
-        self.world_X, self.world_Y = 0, 0
-        self.world_x, self.world_y = 0, 0
-        self.t1 = 0
         self.get_roi = False
-        self.start_count_t1 = False
-        self.center_list = []
-        self.count = 0
-        self.track = False
-        self.rotation_angle = 0
+        self.size = (640, 480)
+        self.roi = (0, 0)
+        self.color_range = self.range_rgb
+
+    def setTargetColor(self, target_color):
+        self.target_color = target_color
 
     def start(self):
         print("ColorTracking Start")
