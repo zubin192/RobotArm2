@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import math
+import time
 from typing import Dict, List, Tuple
 
 # Constants
@@ -13,6 +15,7 @@ RECTANGLE_THICKNESS = 2
 class ObjectPerception:
     def __init__(self, color_ranges: Dict[str, Tuple[np.array, np.array]]):
         self.color_ranges = color_ranges
+        self.__target_color = ('red',)
 
     def detect_objects(self, frame: np.array) -> Dict[str, List[Tuple[int, int, int, int]]]:
         frame_lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
@@ -35,6 +38,44 @@ class ObjectPerception:
 
         return frame
 
+    def set_target_color(self, target_color: str) -> Tuple[bool, Tuple]:
+        self.__target_color = (target_color,)
+        return True, ()
+
+    def get_target_color(self) -> Tuple[str]:
+        return self.__target_color
+
+class ColorTracking:
+    def __init__(self, perception: ObjectPerception):
+        self.perception = perception
+        self.__isRunning = False
+        self._stop = False
+
+    def init(self):
+        pass
+
+    def start(self):
+        self.__isRunning = True
+
+    def stop(self):
+        self.__isRunning = False
+
+    def exit(self):
+        self._stop = True
+        self.__isRunning = False
+
+    def run(self, frame: np.array) -> np.array:
+        if self.__isRunning:
+            detected_objects = self.perception.detect_objects(frame)
+            target_color = self.perception.get_target_color()[0]
+            if target_color in detected_objects:
+                # Your movement logic here based on the detected objects
+                pass
+            frame_with_objects = self.perception.draw_objects(frame, detected_objects)
+            return frame_with_objects
+        else:
+            return frame
+
 def main():
     color_ranges = {
         'red': (np.array([0, 150, 150]), np.array([10, 255, 255])),
@@ -43,6 +84,10 @@ def main():
     }
 
     perception = ObjectPerception(color_ranges)
+    perception.set_target_color('red')  # Set initial target color
+
+    color_tracker = ColorTracking(perception)
+    color_tracker.init()
 
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
@@ -55,8 +100,7 @@ def main():
             print("Error reading frame")
             break
 
-        detected_objects = perception.detect_objects(frame)
-        frame_with_objects = perception.draw_objects(frame, detected_objects)
+        frame_with_objects = color_tracker.run(frame)
 
         cv2.imshow('Frame with Objects', frame_with_objects)
         if cv2.waitKey(1) & 0xFF == ord('q'):
