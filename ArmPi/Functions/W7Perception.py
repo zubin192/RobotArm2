@@ -169,7 +169,6 @@ def run(img):
     return img
  
 if __name__ == '__main__':
-    init()
     start()
     __target_color = ('red', )
     my_camera = Camera.Camera()
