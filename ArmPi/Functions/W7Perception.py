@@ -81,6 +81,7 @@ def run(img,roi):
     global world_x, world_y
 
     roi = ()
+    Frame = run(frame, roi)
     img_copy = img.copy()
     img_h, img_w = img.shape[:2]
     cv2.line(img, (0, int(img_h / 2)), (img_w, int(img_h / 2)), (0, 0, 200), 1)
