@@ -14,14 +14,25 @@ from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
 class ObjectTracker:
+    
     def __init__(self):
         self.target_color = ('red',)
         self.color_range = {
             'red': (np.array([0, 120, 70]), np.array([10, 255, 255])),  # Lower and upper bounds for red color in HSV
             'blue': (np.array([100, 100, 100]), np.array([140, 255, 255])),
-            'green': (np.array([35, 100, 100]), np.array([90, 255, 255]))
+            'green': (np.array([35, 100, 100]), np.array([90, 255, 255])),
+            'black': (np.array([0, 0, 0]), np.array([180, 255, 30])),
+            'white': (np.array([0, 0, 200]), np.array([180, 30, 255]))
+        }
+        self.range_rgb = {
+            'red': (0, 0, 255),
+            'blue': (255, 0, 0),
+            'green': (0, 255, 0),
+            'black': (0, 0, 0),
+            'white': (255, 255, 255)
         }
         # Other class attributes remain the same
+
 
         self.size = (640, 480)
         self.square_length = 60
