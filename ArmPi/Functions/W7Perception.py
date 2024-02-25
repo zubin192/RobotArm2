@@ -37,8 +37,8 @@ class ObjectPerception:
 
 def main():
     color_ranges = {
-        'red': (np.array([0, 120, 80]), np.array([20, 255, 255])),
-        'green': (np.array([40, 40, 40]), np.array([80, 255, 255])),
+        'red': (np.array([0, 150, 150]), np.array([10, 255, 255])),
+        'green': (np.array([40, 50, 50]), np.array([80, 255, 255])),
         'blue': (np.array([100, 100, 100]), np.array([140, 255, 255]))
     }
 
