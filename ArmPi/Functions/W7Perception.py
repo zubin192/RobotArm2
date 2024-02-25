@@ -13,35 +13,14 @@ import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
-class Perception:
-     
-     range_rgb = {
+range_rgb = {
     'red': (0, 0, 255),
     'blue': (255, 0, 0),
     'green': (0, 255, 0),
     'black': (0, 0, 0),
     'white': (255, 255, 255),
 }
-  
-
-__isRunning = False
-
-def start():
-    global __isRunning
-    __isRunning = True
-    print("ColorTracking Start")
-
-def stop():
-    global __isRunning
-    __isRunning = False
-    print("ColorTracking Stop")
-
-def exit():
-    global __isRunning
-    __isRunning = False
-    print("ColorTracking Exit")
-
-
+ 
 __target_color = ('red',)
 # Set the detection color
 def setTargetColor(target_color):
@@ -65,6 +44,23 @@ def getAreaMaxContour(contours):
  
     return area_max_contour, contour_area_max  # Return the largest contour
  
+
+__isRunning = False
+
+def start():
+    global __isRunning
+    __isRunning = True
+    print("ColorTracking Start")
+
+def stop():
+    global __isRunning
+    __isRunning = False
+    print("ColorTracking Stop")
+
+def exit():
+    global __isRunning
+    __isRunning = False
+    print("ColorTracking Exit")
  
 rect = None
 size = (640, 480)
@@ -159,18 +155,17 @@ def run(img):
                     count = 0
                     center_list = []
     return img
-
+ 
 if __name__ == '__main__':
-    perception = Perception()
-    perception.start()
-    perception.setTargetColor('red')
+    start()
+    __target_color = ('red', )
     my_camera = Camera.Camera()
     my_camera.camera_open()
     while True:
         img = my_camera.frame
         if img is not None:
             frame = img.copy()
-            Frame = perception.run(frame)
+            Frame = run(frame)
             cv2.imshow('Frame', Frame)
             key = cv2.waitKey(1)
             if key == 27:
