@@ -14,23 +14,27 @@ from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
 class ObjectTracker:
-
-    range_rgb = {
-        'red': (0, 0, 255),
-        'blue': (255, 0, 0),
-        'green': (0, 255, 0),
-        'black': (0, 0, 0),
-        'white': (255, 255, 255),
-    }
-
     def __init__(self):
         self.target_color = ('red',)
         self.get_roi = False
         self.size = (640, 480)
         self.roi = (0, 0)
-        self.color_range = self.range_rgb
+        self.range_rgb = {
+            'red': (0, 0, 255),
+            'blue': (255, 0, 0),
+            'green': (0, 255, 0),
+            'black': (0, 0, 0),
+            'white': (255, 255, 255),
+        }
+        self.color_range = {
+            'red': (np.array([0, 120, 70]), np.array([10, 255, 255])),  # Lower and upper bounds for red color in HSV
+            'blue': (np.array([100, 100, 100]), np.array([140, 255, 255])),
+            'green': (np.array([35, 100, 100]), np.array([90, 255, 255])),
+            'black': (np.array([0, 0, 0]), np.array([180, 255, 30])),
+            'white': (np.array([0, 0, 200]), np.array([180, 30, 255]))
+        }
 
-    def setTargetColor(self, target_color):
+    def set_target_color(self, target_color):
         self.target_color = target_color
 
     def start(self):
@@ -72,10 +76,10 @@ class ObjectTracker:
                 img_centerx, img_centery = self.get_center(rect, self.roi, self.size, self.square_length)
                 self.world_x, self.world_y = self.convert_coordinate(img_centerx, img_centery, self.size)
 
-                cv2.drawContours(frame, [box], -1, (0, 0, 255), 2)
+                cv2.drawContours(frame, [box], -1, self.range_rgb[detect_color], 2)
                 cv2.putText(frame, '(' + str(self.world_x) + ',' + str(self.world_y) + ')',
                             (min(box[0, 0], box[2, 0]), box[2, 1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                            (0, 0, 255), 1)
+                            self.range_rgb[detect_color], 1)
 
                 distance = math.sqrt(pow(self.world_x - self.last_x, 2) + pow(self.world_y - self.last_y, 2))
                 self.last_x, self.last_y = self.world_x, self.world_y
