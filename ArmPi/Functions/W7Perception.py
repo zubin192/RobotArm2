@@ -15,7 +15,7 @@ import numpy as np
 
 class ObjectTracker:
     def __init__(self):
-        self.target_color = ('red',)
+        self.target_color = ('red','green','blue')
         self.color_range = {
             'red': [(0, 151, 100), (255, 255, 255)], 
             'green': [(0, 0, 0), (255, 115, 255)], 
