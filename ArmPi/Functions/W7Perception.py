@@ -19,6 +19,14 @@ if sys.version_info.major == 2:
 
 __target_color = ('red',)
 
+range_rgb = {
+    'red': (0, 0, 255),
+    'blue': (255, 0, 0),
+    'green': (0, 255, 0),
+    'black': (0, 0, 0),
+    'white': (255, 255, 255),
+}
+
 # Set the detection color
 def setTargetColor(target_color):
     global __target_color
@@ -64,7 +72,7 @@ def stop():
 def exit():
     print("ColorTracking Exit")
 
-def run(img):
+def run(img,roi):
     global rect
     global __target_color
     global size
