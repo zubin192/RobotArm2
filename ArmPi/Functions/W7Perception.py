@@ -1,42 +1,41 @@
 import cv2
 import numpy as np
+from typing import Dict, List, Tuple
+
+# Constants
+MIN_CONTOUR_AREA = 300
+FONT = cv2.FONT_HERSHEY_SIMPLEX
+FONT_SCALE = 0.5
+FONT_COLOR = (0, 255, 0)
+FONT_THICKNESS = 2
+RECTANGLE_THICKNESS = 2
 
 class ObjectPerception:
-    def __init__(self, color_ranges):
+    def __init__(self, color_ranges: Dict[str, Tuple[np.array, np.array]]):
         self.color_ranges = color_ranges
 
-    def detect_objects(self, frame):
-        # Convert frame to LAB color space
+    def detect_objects(self, frame: np.array) -> Dict[str, List[Tuple[int, int, int, int]]]:
         frame_lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
 
         detected_objects = {}
         for color, color_range in self.color_ranges.items():
-            # Apply color thresholding
             mask = cv2.inRange(frame_lab, color_range[0], color_range[1])
-
-            # Find contours
             contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-            # Filter contours by area
-            valid_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 300]
-
-            # Find bounding boxes for valid contours
+            valid_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > MIN_CONTOUR_AREA]
             bounding_boxes = [cv2.boundingRect(cnt) for cnt in valid_contours]
-
             detected_objects[color] = bounding_boxes
 
         return detected_objects
 
-    def draw_objects(self, frame, detected_objects):
+    def draw_objects(self, frame: np.array, detected_objects: Dict[str, List[Tuple[int, int, int, int]]]) -> np.array:
         for color, bounding_boxes in detected_objects.items():
             for (x, y, w, h) in bounding_boxes:
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                cv2.putText(frame, color, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                cv2.rectangle(frame, (x, y), (x + w, y + h), FONT_COLOR, RECTANGLE_THICKNESS)
+                cv2.putText(frame, color, (x, y - 10), FONT, FONT_SCALE, FONT_COLOR, FONT_THICKNESS)
 
         return frame
 
-# Example usage
-if __name__ == "__main__":
+def main():
     color_ranges = {
         'red': (np.array([0, 120, 80]), np.array([20, 255, 255])),
         'green': (np.array([40, 40, 40]), np.array([80, 255, 255])),
@@ -46,10 +45,14 @@ if __name__ == "__main__":
     perception = ObjectPerception(color_ranges)
 
     cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("Error opening video capture")
+        return
 
     while True:
         ret, frame = cap.read()
         if not ret:
+            print("Error reading frame")
             break
 
         detected_objects = perception.detect_objects(frame)
@@ -61,3 +64,6 @@ if __name__ == "__main__":
 
     cap.release()
     cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    main()
