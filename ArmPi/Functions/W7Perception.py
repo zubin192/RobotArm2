@@ -90,7 +90,6 @@ def run(img):
     global __isRunning
     global unreachable
     global detect_color
-    global action_finish
     global rotation_angle
     global last_x, last_y
     global world_X, world_Y
@@ -142,8 +141,8 @@ def run(img):
             last_x, last_y = world_x, world_y
             track = True
             # Accumulate judgment
-            if action_finish:
-                if distance < 0.3:
+            if distance < 0.3:
+                    # Adjust the indentation level of the code block inside the if statement
                     center_list.extend((world_x, world_y))
                     count += 1
                     if start_count_t1:
@@ -156,7 +155,7 @@ def run(img):
                         count = 0
                         center_list = []
                         start_pick_up = True
-                else:
+            else:
                     t1 = time.time()
                     start_count_t1 = True
                     count = 0
