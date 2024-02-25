@@ -1,89 +1,105 @@
 #!/usr/bin/python3
 # coding=utf8
 import sys
+sys.path.append('/home/pi/ArmPi/')
 import cv2
 import time
-import threading
 import numpy as np
-import ColorTracking
-import Camera
-from ArmIK.Transform import *
-from ArmIK.ArmMoveIK import *
+import math
+from LABConfig import *
+from CameraCalibration.CalibrationConfig import *
 
-# Initialize ArmIK and Camera
-AK = ArmIK()
-my_camera = Camera.Camera()
-my_camera.camera_open()
+class ImageProcessor:
+    def __init__(self, target_color):
+        self.target_color = target_color
+        self.get_roi = False
+        self.start_pick_up = False
+        self.last_x, self.last_y = 0, 0
+        self.center_list = []
+        self.count = 0
+        self.start_count_t1 = True
+        self.t1 = time.time()
 
-# Set colors and parameters for perception
-color_range = {
-    'red':   [np.array([0, 160, 50]), np.array([10, 255, 255])],
-    'green': [np.array([35, 100, 50]), np.array([90, 255, 255])],
-    'blue':  [np.array([100, 100, 50]), np.array([140, 255, 255])],
-}
+    def resize_and_blur(self, img):
+        frame_resize = cv2.resize(img, size, interpolation=cv2.INTER_NEAREST)
+        frame_gb = cv2.GaussianBlur(frame_resize, (11, 11), 11)
+        return frame_gb
 
-__target_color = ('red',)
+    def convert_to_lab(self, img):
+        return cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
 
-# Function to find the contour with maximum area
-def getAreaMaxContour(contours):
-    contour_area_temp = 0
-    contour_area_max = 0
-    area_max_contour = None
- 
-    for c in contours:  # Iterate through all contours
-        contour_area_temp = math.fabs(cv2.contourArea(c))  # Calculate contour area
-        if contour_area_temp > contour_area_max:
-            contour_area_max = contour_area_temp
-            if contour_area_temp > 300:  # Only contours with an area greater than 300 are considered valid to filter out noise
-                area_max_contour = c
- 
-    return area_max_contour, contour_area_max  # Return the largest contour
+    def detect_color(self, img):
+        frame_mask = cv2.inRange(img, color_range[self.target_color][0], color_range[self.target_color][1])
+        opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8))
+        closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6, 6), np.uint8))
+        return closed
 
-# Function to set the target color
-def setTargetColor(target_color):
-    global __target_color
-    __target_color = target_color
-    return (True, ())
+    def find_largest_contour(self, img):
+        contours = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
+        areaMaxContour, area_max = getAreaMaxContour(contours)
+        return areaMaxContour, area_max
 
-# Function to run perception and arm movement
-def run():
-    global __target_color
+    def draw_and_label(self, img, areaMaxContour):
+        rect = cv2.minAreaRect(areaMaxContour)
+        box = np.int0(cv2.boxPoints(rect))
+        roi = getROI(box)
+        self.get_roi = True
+        img_centerx, img_centery = getCenter(rect, roi, size, square_length)
+        world_x, world_y = convertCoordinate(img_centerx, img_centery, size)
+        cv2.drawContours(img, [box], -1, range_rgb[self.target_color], 2)
+        cv2.putText(img, '(' + str(world_x) + ',' + str(world_y) + ')', (min(box[0, 0], box[2, 0]), box[2, 1] - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, range_rgb[self.target_color], 1)
+        return img, world_x, world_y
 
-    while True:
-        img = my_camera.frame
-        if img is not None:
-            frame = img.copy()
-            frame_lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+    def process_image(self, img):
+        img_copy = self.resize_and_blur(img)
+        img_lab = self.convert_to_lab(img_copy)
+        detected = self.detect_color(img_lab)
+        areaMaxContour, area_max = self.find_largest_contour(detected)
+        if area_max > 2500:
+            img, world_x, world_y = self.draw_and_label(img, areaMaxContour)
+            distance = math.sqrt(pow(world_x - self.last_x, 2) + pow(world_y - self.last_y, 2))
+            self.last_x, self.last_y = world_x, world_y
+            if action_finish:
+                if distance < 0.3:
+                    self.center_list.extend((world_x, world_y))
+                    self.count += 1
+                    if self.start_count_t1:
+                        self.start_count_t1 = False
+                        self.t1 = time.time()
+                    if time.time() - self.t1 > 1.5:
+                        rotation_angle = rect[2]
+                        self.start_count_t1 = True
+                        world_X, world_Y = np.mean(np.array(self.center_list).reshape(self.count, 2), axis=0)
+                        self.count = 0
+                        self.center_list = []
+                        self.start_pick_up = True
+                else:
+                    self.t1 = time.time()
+                    self.start_count_t1 = True
+                    self.count = 0
+                    self.center_list = []
+        return img
+    
 
-            area_max = 0
-            areaMaxContour = 0
-
-            for color in color_range:
-                if color in __target_color:
-                    frame_mask = cv2.inRange(frame_lab, color_range[color][0], color_range[color][1])
-                    contours = cv2.findContours(frame_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
-                    areaMaxContour, area_max = getAreaMaxContour(contours)
-
-            # Arm movement logic based on perception goes here
-
-            cv2.imshow('Frame', frame)
-            key = cv2.waitKey(1)
-            if key == 27:
-                break
-
-if __name__ == '__main__':
-
-    __target_color = ('red', )
+def main():
+    # Initialize the camera
     my_camera = Camera.Camera()
     my_camera.camera_open()
+
+    # Initialize the image processor with the target color
+    my_processor = ImageProcessor('red')
+
     while True:
         img = my_camera.frame
         if img is not None:
-            frame = img.copy()
-            Frame = run(frame)
-            cv2.imshow('Frame', Frame)
-            key = cv2.waitKey(1)
-            if key == 27:
+            result = my_processor.process_image(img)
+            cv2.imshow('Result', result)
+            if cv2.waitKey(1) == 27:  # Press 'Esc' to exit
                 break
-    my_camera.camera_close()
+
     cv2.destroyAllWindows()
+    my_camera.camera_close()
+
+if __name__ == "__main__":
+    main()
