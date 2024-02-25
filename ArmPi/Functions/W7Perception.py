@@ -80,7 +80,7 @@ def run(img,roi):
     global world_X, world_Y
     global world_x, world_y
 
-    roi = ()
+    roi = False
     Frame = run(frame, roi)
     img_copy = img.copy()
     img_h, img_w = img.shape[:2]
