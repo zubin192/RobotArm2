@@ -14,6 +14,7 @@ from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
 class ObjectTracker:
+   class ObjectTracker:
     def __init__(self):
         self.target_color = ('red',)
         self.get_roi = False
@@ -33,6 +34,9 @@ class ObjectTracker:
             'black': (np.array([0, 0, 0]), np.array([180, 255, 30])),
             'white': (np.array([0, 0, 200]), np.array([180, 30, 255]))
         }
+        self.square_length = 10  # Define the square length here
+
+
 
     def set_target_color(self, target_color):
         self.target_color = target_color
