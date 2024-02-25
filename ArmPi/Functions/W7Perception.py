@@ -22,21 +22,15 @@ class ColorTracker:
         'black': (0, 0, 0),
         'white': (255, 255, 255),
     }
-    
+
     def __init__(self):
         self.__target_color = ('red',)
         self.__isRunning = False
-        self.rect = None
         self.size = (640, 480)
-        self.rotation_angle = 0
-        self.world_X, self.world_Y = 0, 0
-        self.world_x, self.world_y = 0, 0
-        self.t1 = 0
         self.roi = ()
         self.get_roi = False
         self.last_x, self.last_y = 0, 0
         self.count = 0
-        self.track = False
         self.center_list = []
         self.start_count_t1 = False
 
@@ -55,7 +49,7 @@ class ColorTracker:
     def exit(self):
         self.__isRunning = False
         print("ColorTracking Exit")
-        
+
     def getAreaMaxContour(self, contours):
         contour_area_temp = 0
         contour_area_max = 0
@@ -84,7 +78,7 @@ class ColorTracker:
 
         if self.get_roi:
             self.get_roi = False
-            frame_gb = self.getMaskROI(frame_gb, self.roi, self.size)
+            frame_gb = getMaskROI(frame_gb, self.roi, self.size)
 
         frame_lab = cv2.cvtColor(frame_gb, cv2.COLOR_BGR2LAB)
 
@@ -99,13 +93,13 @@ class ColorTracker:
                 contours = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
                 areaMaxContour, area_max = self.getAreaMaxContour(contours)
             if area_max > 2500:
-                self.rect = cv2.minAreaRect(areaMaxContour)
-                box = np.int0(cv2.boxPoints(self.rect))
+                rect = cv2.minAreaRect(areaMaxContour)
+                box = np.int0(cv2.boxPoints(rect))
 
                 self.roi = self.getROI(box)
                 self.get_roi = True
 
-                img_centerx, img_centery = self.getCenter(self.rect, self.roi, self.size, square_length)
+                img_centerx, img_centery = self.getCenter(rect, self.roi, self.size, square_length)
                 self.world_x, self.world_y = self.convertCoordinate(img_centerx, img_centery, self.size)
 
                 cv2.drawContours(img, [box], -1, self.range_rgb[detect_color], 2)
@@ -122,7 +116,7 @@ class ColorTracker:
                         self.start_count_t1 = False
                         self.t1 = time.time()
                     if time.time() - self.t1 > 1.5:
-                        self.rotation_angle = self.rect[2]
+                        self.rotation_angle = rect[2]
                         self.start_count_t1 = True
                         self.world_X, self.world_Y = np.mean(np.array(self.center_list).reshape(self.count, 2), axis=0)
                         self.count = 0
@@ -155,3 +149,6 @@ if __name__ == '__main__':
                 
     my_camera.camera_close()
     cv2.destroyAllWindows()
+
+
+
