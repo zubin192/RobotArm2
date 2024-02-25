@@ -38,7 +38,12 @@ class ImageProcessor:
         opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8))
         closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6, 6), np.uint8))
         return closed
-
+    
+    def find_largest_contour(self, img):
+        contours = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
+        areaMaxContour, area_max = self.getAreaMaxContour(contours)
+        return areaMaxContour, area_max
+    
     def getAreaMaxContour(contours):
         contour_area_temp = 0
         contour_area_max = 0
