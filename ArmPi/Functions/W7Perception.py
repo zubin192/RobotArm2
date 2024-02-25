@@ -1,43 +1,80 @@
-#!/usr/bin/env python3
-
+#!/usr/bin/python3
+# coding=utf8
+import sys
 import cv2
+import time
+import threading
+import numpy as np
+import ColorTracking
 
-class BlockIdentifier:
-    def __init__(self, video_source):
-        self.video_source = video_source
-        self.cap = cv2.VideoCapture(self.video_source)
+from Camera import Camera
+from ArmIK.Transform import *
+from ArmIK.ArmMoveIK import *
 
-    def get_frame(self):
-        ret, frame = self.cap.read()
-        return frame
+# Initialize ArmIK and Camera
+AK = ArmIK()
+my_camera = Camera()
+my_camera.camera_open()
 
-    def identify_block(self, frame):
-        # Implement your block identification logic here
-        # This could involve image processing techniques to identify the block
-        # For now, let's assume it returns the coordinates of the block in the frame
-        block_coordinates = (0, 0)
-        return block_coordinates
+# Set colors and parameters for perception
+color_range = {
+    'red':   [np.array([0, 160, 50]), np.array([10, 255, 255])],
+    'green': [np.array([35, 100, 50]), np.array([90, 255, 255])],
+    'blue':  [np.array([100, 100, 50]), np.array([140, 255, 255])],
+}
 
-    def label_block(self, frame, block_coordinates):
-        labeled_frame = cv2.putText(frame, 'Block', block_coordinates, cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
-        return labeled_frame
+__target_color = ('red',)
 
-    def display_frame(self, frame):
-        cv2.imshow('Frame', frame)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+# Function to find the contour with maximum area
+def getAreaMaxContour(contours):
+    # Implementation of this function is kept intact
 
-    def process_video(self):
-        while True:
-            frame = self.get_frame()
-            if frame is not None:
-                block_coordinates = self.identify_block(frame)
-                labeled_frame = self.label_block(frame, block_coordinates)
-                self.display_frame(labeled_frame)
-            else:
+# Initialize arm position
+def initMove():
+    # Implementation of this function is kept intact
+
+# Function to set the target color
+def setTargetColor(target_color):
+    global __target_color
+    __target_color = target_color
+    return (True, ())
+
+# Function to run perception and arm movement
+def run():
+    global __target_color
+
+    while True:
+        img = my_camera.frame
+        if img is not None:
+            frame = img.copy()
+            frame_lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+
+            area_max = 0
+            areaMaxContour = 0
+
+            for color in color_range:
+                if color in __target_color:
+                    frame_mask = cv2.inRange(frame_lab, color_range[color][0], color_range[color][1])
+                    contours = cv2.findContours(frame_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
+                    areaMaxContour, area_max = getAreaMaxContour(contours)
+
+            # Arm movement logic based on perception goes here
+
+            cv2.imshow('Frame', frame)
+            key = cv2.waitKey(1)
+            if key == 27:
                 break
 
-if __name__ == "__main__":
-    # Usage
-    block_identifier = BlockIdentifier('video.mp4')
-    block_identifier.process_video()
+# Initialize arm position and start perception
+initMove()
+th = threading.Thread(target=run)
+th.setDaemon(True)
+th.start()
+
+# Main loop
+while True:
+    pass
+
+# Clean up
+my_camera.camera_close()
+cv2.destroyAllWindows()
