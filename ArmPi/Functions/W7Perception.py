@@ -50,52 +50,7 @@ def getAreaMaxContour(contours):
  
     return area_max_contour, contour_area_max  # Return the largest contour
  
-# Angle when gripper is closed during picking
-servo1 = 700
- 
-# Initial position
-def initMove():
-    Board.setBusServoPulse(1, servo1 - 50, 300)
-    Board.setBusServoPulse(2, 500, 500)
-    AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
- 
-def setBuzzer(timer):
-    Board.setBuzzer(0)
-    Board.setBuzzer(1)
-    time.sleep(timer)
-    Board.setBuzzer(0)
- 
-# Set the RGB lights of the extension board to match the tracked color
-def set_rgb(color):
-    if color == "red":
-        Board.RGB.setPixelColor(0, Board.PixelColor(255, 0, 0))
-        Board.RGB.setPixelColor(1, Board.PixelColor(255, 0, 0))
-        Board.RGB.show()
-    elif color == "green":
-        Board.RGB.setPixelColor(0, Board.PixelColor(0, 255, 0))
-        Board.RGB.setPixelColor(1, Board.PixelColor(0, 255, 0))
-        Board.RGB.show()
-    elif color == "blue":
-        Board.RGB.setPixelColor(0, Board.PixelColor(0, 0, 255))
-        Board.RGB.setPixelColor(1, Board.PixelColor(0, 0, 255))
-        Board.RGB.show()
-    else:
-        Board.RGB.setPixelColor(0, Board.PixelColor(0, 0, 0))
-        Board.RGB.setPixelColor(1, Board.PixelColor(0, 0, 0))
-        Board.RGB.show()
- 
-count = 0
-track = False
-_stop = False
-get_roi = False
-center_list = []
-first_move = True
-__isRunning = False
-detect_color = 'None'
-action_finish = True
-start_pick_up = False
-start_count_t1 = True
-# Variable reset
+
 def reset():
     global count
     global track
