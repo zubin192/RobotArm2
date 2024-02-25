@@ -1,17 +1,18 @@
 #!/usr/bin/python3
 # coding=utf8
 import sys
-sys.path.append('/home/pi/ArmPi/')
 import cv2
 import time
 import Camera
 import threading
+import math
+import numpy as np
+sys.path.append('/home/pi/ArmPi/')
 from LABConfig import *
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
-import numpy as np
 
 class Perception:
     def __init__(self):
@@ -66,8 +67,34 @@ class Perception:
         print("ColorTracking Exit")
 
     def run(self, img):
-        # The rest of the run function goes here
-        pass
+        org_frame = img.copy()  # Copy the image
+
+        frame_resize = cv2.resize(org_frame, self.size, interpolation=cv2.INTER_NEAREST)
+        frame_gb = cv2.GaussianBlur(frame_resize, (11, 11), 11)
+        # Convert image to HSV
+        frame_hsv = cv2.cvtColor(frame_gb, cv2.COLOR_BGR2HSV)
+
+        color_lower = np.array([self.range_rgb[self.__target_color][0], 43, 46])
+        color_upper = np.array([self.range_rgb[self.__target_color][1], 255, 255])
+        frame_mask = cv2.inRange(frame_hsv, color_lower, color_upper)
+        opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8))
+        closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6, 6), np.uint8))
+        contours = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
+        areaMaxContour, area_max = self.getAreaMaxContour(contours)
+
+        if areaMaxContour is not None:
+            if area_max > 2500:  # Have found the largest area
+                rect = cv2.minAreaRect(areaMaxContour)
+                self.rect = np.int0(cv2.boxPoints(rect))
+
+                roi = getROI([self.rect[0], self.rect[2]], org_frame)
+                self.roi = roi
+                self.get_roi = True
+
+                img_centerx, img_centery = getCenter([self.rect[0], self.rect[2]], org_frame, square_length)
+                self.world_x, self.world_y = convertCoordinate(img_centerx, img_centery, org_frame)
+
+        return img
 
 if __name__ == '__main__':
     perception = Perception()
