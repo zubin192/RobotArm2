@@ -6,8 +6,7 @@ import time
 import threading
 import numpy as np
 import ColorTracking
-
-from Camera import Camera
+import Camera
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
 
