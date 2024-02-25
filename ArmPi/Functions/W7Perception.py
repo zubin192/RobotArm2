@@ -78,6 +78,7 @@ world_x, world_y = 0, 0
 
 t1 = 0
 roi = ()
+get_roi = False
 last_x, last_y = 0, 0
 def run(img):
     global roi
