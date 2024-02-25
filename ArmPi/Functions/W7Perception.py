@@ -12,8 +12,16 @@ from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
- 
+
 class ColorTracker:
+    range_rgb = {
+        'red': (0, 0, 255),
+        'blue': (255, 0, 0),
+        'green': (0, 255, 0),
+        'black': (0, 0, 0),
+        'white': (255, 255, 255),
+    }
+
     def __init__(self, target_color='red'):
         self.__target_color = target_color
         self.__is_running = False
@@ -75,10 +83,10 @@ class ColorTracker:
 
             area_max = 0
             area_max_contour = None
-            for i in range_rgb:
+            for i in self.range_rgb:
                 if i in self.__target_color:
                     detect_color = i
-                    frame_mask = cv2.inRange(frame_lab, range_rgb[detect_color][0], range_rgb[detect_color][1])
+                    frame_mask = cv2.inRange(frame_lab, self.range_rgb[detect_color][0], self.range_rgb[detect_color][1])
                     opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8))
                     closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6, 6), np.uint8))
                     contours = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
@@ -92,10 +100,10 @@ class ColorTracker:
                     img_centerx, img_centery = self.get_center(self.__rect, roi, self.__size, square_length)
                     self.__world_x, self.__world_y = self.convert_coordinate(img_centerx, img_centery, self.__size)
 
-                    cv2.drawContours(frame, [box], -1, range_rgb[detect_color], 2)
+                    cv2.drawContours(frame, [box], -1, self.range_rgb[detect_color], 2)
                     cv2.putText(frame, '(' + str(self.__world_x) + ',' + str(self.__world_y) + ')',
                                 (min(box[0, 0], box[2, 0]), box[2, 1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                                range_rgb[detect_color], 1)
+                                self.range_rgb[detect_color], 1)
                     distance = math.sqrt(pow(self.__world_x - self.__last_x, 2) + pow(self.__world_y - self.__last_y, 2))
                     self.__last_x, self.__last_y = self.__world_x, self.__world_y
                     self.__track = True
