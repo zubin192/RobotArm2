@@ -51,25 +51,20 @@ def getAreaMaxContour(contours):
     return area_max_contour, contour_area_max  # Return the largest contour
  
 
- 
-# App start call
+__isRunning = False
+
 def start():
+    global __isRunning
     __isRunning = True
     print("ColorTracking Start")
- 
-# App stop call
+
 def stop():
-    global _stop
     global __isRunning
-    _stop = True
     __isRunning = False
     print("ColorTracking Stop")
- 
-# App exit call
+
 def exit():
-    global _stop
     global __isRunning
-    _stop = True
     __isRunning = False
     print("ColorTracking Exit")
  
