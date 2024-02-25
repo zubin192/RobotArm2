@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import cv2
 
 class BlockIdentifier:
@@ -35,6 +37,7 @@ class BlockIdentifier:
             else:
                 break
 
-# Usage
-block_identifier = BlockIdentifier('video.mp4')
-block_identifier.process_video()
+if __name__ == "__main__":
+    # Usage
+    block_identifier = BlockIdentifier('video.mp4')
+    block_identifier.process_video()
