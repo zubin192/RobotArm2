@@ -73,8 +73,7 @@ def run():
                 break
 
 if __name__ == '__main__':
-    init()
-    start()
+
     __target_color = ('red', )
     my_camera = Camera.Camera()
     my_camera.camera_open()
