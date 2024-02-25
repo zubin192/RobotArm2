@@ -44,18 +44,18 @@ class ImageProcessor:
         areaMaxContour, area_max = self.getAreaMaxContour(contours)
         return areaMaxContour, area_max
     
-    def getAreaMaxContour(contours):
+    def getAreaMaxContour(self, contours):
         contour_area_temp = 0
         contour_area_max = 0
         area_max_contour = None
-    
+
         for c in contours:  # Iterate through all contours
             contour_area_temp = math.fabs(cv2.contourArea(c))  # Calculate contour area
             if contour_area_temp > contour_area_max:
                 contour_area_max = contour_area_temp
                 if contour_area_temp > 300:  # Only contours with an area greater than 300 are considered valid to filter out noise
                     area_max_contour = c
-    
+
         return area_max_contour, contour_area_max  # Return the largest contour
     
     def draw_and_label(self, img, areaMaxContour):
