@@ -137,18 +137,21 @@ class ColorTracker:
         return img
 
 if __name__ == '__main__':
-    start()
-    __target_color = ('red', )
+    color_tracker = ColorTracker()
+    color_tracker.start()
+    color_tracker.setTargetColor(('red',))
     my_camera = Camera.Camera()
     my_camera.camera_open()
+    
     while True:
         img = my_camera.frame
         if img is not None:
             frame = img.copy()
-            Frame = run(frame)
-            cv2.imshow('Frame', Frame)
+            frame_processed = color_tracker.run(frame)
+            cv2.imshow('Frame', frame_processed)
             key = cv2.waitKey(1)
             if key == 27:
                 break
+                
     my_camera.camera_close()
     cv2.destroyAllWindows()
