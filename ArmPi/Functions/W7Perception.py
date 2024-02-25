@@ -69,10 +69,10 @@ class ColorTracking:
             detected_objects = self.perception.detect_objects(frame)
             target_color = self.perception.get_target_color()[0]
             if target_color in detected_objects:
-                # Your movement logic here based on the detected objects
-                pass
-            frame_with_objects = self.perception.draw_objects(frame, detected_objects)
-            return frame_with_objects
+                for (x, y, w, h) in detected_objects[target_color]:
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), FONT_COLOR, RECTANGLE_THICKNESS)
+                    cv2.putText(frame, target_color, (x, y - 10), FONT, FONT_SCALE, FONT_COLOR, FONT_THICKNESS)
+            return frame
         else:
             return frame
 
