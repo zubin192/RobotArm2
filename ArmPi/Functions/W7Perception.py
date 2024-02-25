@@ -1,11 +1,17 @@
+#!/usr/bin/python3
+# coding=utf8
+import sys
+sys.path.append('/home/pi/ArmPi/')
 import cv2
-import numpy as np
-import math
 import time
-import Camera  # Assuming this is a module containing camera-related functions
+import Camera
+import threading
 from LABConfig import *
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
+import HiwonderSDK.Board as Board
+from CameraCalibration.CalibrationConfig import *
+import numpy as np
 
 class ColorTracker:
     def __init__(self, target_color='red'):
