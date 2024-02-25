@@ -128,6 +128,7 @@ class ColorTracker:
 
         return img
 
+
 if __name__ == '__main__':
     color_tracker = ColorTracker()
     color_tracker.start()
