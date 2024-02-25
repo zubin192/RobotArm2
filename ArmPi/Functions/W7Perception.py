@@ -72,10 +72,20 @@ def run():
             if key == 27:
                 break
 
-# Main loop
-while True:
-    pass
-
-# Clean up
-my_camera.camera_close()
-cv2.destroyAllWindows()
+if __name__ == '__main__':
+    init()
+    start()
+    __target_color = ('red', )
+    my_camera = Camera.Camera()
+    my_camera.camera_open()
+    while True:
+        img = my_camera.frame
+        if img is not None:
+            frame = img.copy()
+            Frame = run(frame)
+            cv2.imshow('Frame', Frame)
+            key = cv2.waitKey(1)
+            if key == 27:
+                break
+    my_camera.camera_close()
+    cv2.destroyAllWindows()
