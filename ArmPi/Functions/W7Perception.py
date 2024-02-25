@@ -31,21 +31,6 @@ class ColorTracker:
         self.__start_pick_up = False
         self.__camera = Camera.Camera()  # Initialize camera
 
-    def start(self):
-        self.__is_running = True
-        print("ColorTracking Start")
-
-    def stop(self):
-        self.__is_running = False
-        print("ColorTracking Stop")
-
-    def exit(self):
-        self.__is_running = False
-        print("ColorTracking Exit")
-
-    def set_target_color(self, target_color):
-        self.__target_color = target_color
-
     def get_area_max_contour(self, contours):
         contour_area_max = 0
         area_max_contour = None
