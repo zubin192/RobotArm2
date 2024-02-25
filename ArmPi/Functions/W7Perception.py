@@ -12,16 +12,8 @@ from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
+
 class ColorTracker:
-
-    range_rgb = {
-    'red': (0, 0, 255),
-    'blue': (255, 0, 0),
-    'green': (0, 255, 0),
-    'black': (0, 0, 0),
-    'white': (255, 255, 255),
-    }
-
 
     def __init__(self, target_color='red'):
         self.__target_color = target_color
