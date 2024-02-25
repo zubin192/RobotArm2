@@ -1,19 +1,28 @@
 #!/usr/bin/python3
 # coding=utf8
-import sys
-sys.path.append('/home/pi/ArmPi/')
 import cv2
 import time
 import Camera
 import threading
+import math
+import numpy as np
 from LABConfig import *
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
-import numpy as np
 
 class ColorTracker:
+
+    range_rgb = {
+    'red': (0, 0, 255),
+    'blue': (255, 0, 0),
+    'green': (0, 255, 0),
+    'black': (0, 0, 0),
+    'white': (255, 255, 255),
+    }
+
+
     def __init__(self, target_color='red'):
         self.__target_color = target_color
         self.__is_running = False
@@ -58,21 +67,17 @@ class ColorTracker:
 
         return area_max_contour, contour_area_max
 
-    def run(self):
+    def run(self, frame):
         self.start()
         self.__target_color = ('red',)  # Set default target color
         self.__camera.camera_open()  # Open camera
-        while True:
-            img = self.__camera.frame
-            if img is not None:
-                frame = img.copy()
-                frame = self.detect_color(frame)
-                cv2.imshow('Frame', frame)
-                key = cv2.waitKey(1)
-                if key == 27:
-                    break
-        self.__camera.camera_close()  # Close camera
-        cv2.destroyAllWindows()
+        img = frame.copy()
+        img = self.detect_color(img)
+        cv2.imshow('Frame', img)
+        key = cv2.waitKey(1)
+        if key == 27:
+            self.__camera.camera_close()  # Close camera
+            cv2.destroyAllWindows()
 
     def detect_color(self, img):
         img_copy = img.copy()
@@ -136,3 +141,17 @@ class ColorTracker:
                     self.__center_list = []
         return img
 
+if __name__ == '__main__':
+    tracker = ColorTracker()  # Instantiate the ColorTracker class
+    my_camera = Camera.Camera()
+    my_camera.camera_open()
+    while True:
+        img = my_camera.frame
+        if img is not None:
+            frame = img.copy()
+            tracker.run(frame)  # Call the run method of the ColorTracker instance
+            key = cv2.waitKey(1)
+            if key == 27:
+                break
+    my_camera.camera_close()
+    cv2.destroyAllWindows()
