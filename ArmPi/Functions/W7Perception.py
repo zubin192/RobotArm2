@@ -13,71 +13,38 @@ import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
-
 class ObjectTracker:
     def __init__(self):
         self.target_color = ('red',)
-        self.is_running = False
-        self.last_x, self.last_y = 0, 0
-        self.world_X, self.world_Y = 0, 0
-        self.world_x, self.world_y = 0, 0
         self.color_range = {
             'red': (np.array([0, 120, 70]), np.array([10, 255, 255])),
             'blue': (np.array([100, 100, 100]), np.array([140, 255, 255])),
             'green': (np.array([35, 100, 100]), np.array([90, 255, 255]))
         }
         self.size = (640, 480)
-        self.rotation_angle = 0
-        self.unreachable = False
-        self.track = False
-        self.get_roi = False
-        self.start_count_t1 = False
-        self.count = 0
-        self.center_list = []
         self.square_length = 60
         self.roi = ()
-
-    def set_target_color(self, target_color):
-        self.target_color = target_color
+        self.last_x, self.last_y = 0, 0
+        self.world_X, self.world_Y = 0, 0
+        self.world_x, self.world_y = 0, 0
+        self.t1 = 0
+        self.get_roi = False
+        self.start_count_t1 = False
+        self.center_list = []
+        self.count = 0
+        self.track = False
+        self.rotation_angle = 0
 
     def start(self):
-        self.is_running = True
         print("ColorTracking Start")
 
-    def stop(self):
-        self.is_running = False
-        print("ColorTracking Stop")
-
-    def exit(self):
-        self.is_running = False
-        print("ColorTracking Exit")
-
-    def get_area_max_contour(self, contours):
-        contour_area_temp = 0
-        contour_area_max = 0
-        area_max_contour = None
-
-        for c in contours:
-            contour_area_temp = math.fabs(cv2.contourArea(c))
-            if contour_area_temp > contour_area_max:
-                contour_area_max = contour_area_temp
-                if contour_area_temp > 300:
-                    area_max_contour = c
-
-        return area_max_contour, contour_area_max
-
     def run(self, img):
-        if not self.is_running:
-            return img
-        
-        t1 = time.time()  # Initialize t1 here
+        frame = img.copy()
+        img_h, img_w = frame.shape[:2]
+        cv2.line(frame, (0, int(img_h / 2)), (img_w, int(img_h / 2)), (0, 0, 200), 1)
+        cv2.line(frame, (int(img_w / 2), 0), (int(img_w / 2), img_h), (0, 0, 200), 1)
 
-        img_copy = img.copy()
-        img_h, img_w = img.shape[:2]
-        cv2.line(img, (0, int(img_h / 2)), (img_w, int(img_h / 2)), (0, 0, 200), 1)
-        cv2.line(img, (int(img_w / 2), 0), (int(img_w / 2), img_h), (0, 0, 200), 1)
-
-        frame_resize = cv2.resize(img_copy, self.size, interpolation=cv2.INTER_NEAREST)
+        frame_resize = cv2.resize(frame, self.size, interpolation=cv2.INTER_NEAREST)
         frame_gb = cv2.GaussianBlur(frame_resize, (11, 11), 11)
 
         if self.get_roi:
@@ -107,8 +74,8 @@ class ObjectTracker:
                 img_centerx, img_centery = self.get_center(rect, self.roi, self.size, self.square_length)
                 self.world_x, self.world_y = self.convert_coordinate(img_centerx, img_centery, self.size)
 
-                cv2.drawContours(img, [box], -1, (0, 0, 255), 2)
-                cv2.putText(img, '(' + str(self.world_x) + ',' + str(self.world_y) + ')',
+                cv2.drawContours(frame, [box], -1, (0, 0, 255), 2)
+                cv2.putText(frame, '(' + str(self.world_x) + ',' + str(self.world_y) + ')',
                             (min(box[0, 0], box[2, 0]), box[2, 1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                             (0, 0, 255), 1)
 
@@ -121,8 +88,8 @@ class ObjectTracker:
                     self.count += 1
                     if self.start_count_t1:
                         self.start_count_t1 = False
-                        t1 = time.time()
-                    if time.time() - t1 > 1.5:
+                        self.t1 = time.time()
+                    if time.time() - self.t1 > 1.5:
                         self.rotation_angle = rect[2]
                         self.start_count_t1 = True
                         self.world_X, self.world_Y = np.mean(np.array(self.center_list).reshape(self.count, 2), axis=0)
@@ -130,26 +97,42 @@ class ObjectTracker:
                         self.center_list = []
                         self.start_pick_up = True
                 else:
-                    t1 = time.time()
+                    self.t1 = time.time()
                     self.start_count_t1 = True
                     self.count = 0
                     self.center_list = []
 
-        return img
+        return frame
 
+    def get_area_max_contour(self, contours):
+        contour_area_temp = 0
+        contour_area_max = 0
+        area_max_contour = None
+
+        for c in contours:
+            contour_area_temp = math.fabs(cv2.contourArea(c))
+            if contour_area_temp > contour_area_max:
+                contour_area_max = contour_area_temp
+                if contour_area_temp > 300:
+                    area_max_contour = c
+
+        return area_max_contour, contour_area_max
 
     def get_mask_roi(self, frame, roi, size):
+        # Implement this method based on your requirement
         return frame
 
     def get_roi_from_box(self, box):
+        # Implement this method based on your requirement
         return (0, 0)
 
     def get_center(self, rect, roi, size, square_length):
+        # Implement this method based on your requirement
         return 0, 0
 
     def convert_coordinate(self, img_centerx, img_centery, size):
+        # Implement this method based on your requirement
         return 0, 0
-
 
 if __name__ == '__main__':
     tracker = ObjectTracker()
