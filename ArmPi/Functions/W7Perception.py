@@ -11,6 +11,7 @@ from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
+from Camera import Camera
 
 class ColorTracker:
     def __init__(self):
@@ -131,9 +132,9 @@ if __name__ == '__main__':
     color_tracker = ColorTracker()
     color_tracker.start()
     color_tracker.setTargetColor(('red',))
-    my_camera = Camera.Camera()
+    my_camera = Camera()
     my_camera.camera_open()
-    
+
     while True:
         img = my_camera.frame
         if img is not None:
