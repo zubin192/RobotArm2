@@ -14,14 +14,34 @@ from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
 class Perception:
-   range_rgb = {
+     
+     range_rgb = {
     'red': (0, 0, 255),
     'blue': (255, 0, 0),
     'green': (0, 255, 0),
     'black': (0, 0, 0),
     'white': (255, 255, 255),
 }
- 
+  
+
+__isRunning = False
+
+def start():
+    global __isRunning
+    __isRunning = True
+    print("ColorTracking Start")
+
+def stop():
+    global __isRunning
+    __isRunning = False
+    print("ColorTracking Stop")
+
+def exit():
+    global __isRunning
+    __isRunning = False
+    print("ColorTracking Exit")
+
+
 __target_color = ('red',)
 # Set the detection color
 def setTargetColor(target_color):
@@ -45,23 +65,6 @@ def getAreaMaxContour(contours):
  
     return area_max_contour, contour_area_max  # Return the largest contour
  
-
-__isRunning = False
-
-def start():
-    global __isRunning
-    __isRunning = True
-    print("ColorTracking Start")
-
-def stop():
-    global __isRunning
-    __isRunning = False
-    print("ColorTracking Stop")
-
-def exit():
-    global __isRunning
-    __isRunning = False
-    print("ColorTracking Exit")
  
 rect = None
 size = (640, 480)
