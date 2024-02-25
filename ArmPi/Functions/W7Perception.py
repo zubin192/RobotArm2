@@ -4,7 +4,6 @@ import sys
 sys.path.append('/home/pi/ArmPi/')
 import cv2
 import time
-import Camera
 import threading
 from LABConfig import *
 from ArmIK.Transform import *
@@ -13,17 +12,15 @@ import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
-
 class ColorTracker:
-    range_rgb = {
-        'red': (0, 0, 255),
-        'blue': (255, 0, 0),
-        'green': (0, 255, 0),
-        'black': (0, 0, 0),
-        'white': (255, 255, 255),
-    }
-
     def __init__(self):
+        self.range_rgb = {
+            'red': (0, 0, 255),
+            'blue': (255, 0, 0),
+            'green': (0, 255, 0),
+            'black': (0, 0, 0),
+            'white': (255, 255, 255),
+        }
         self.__target_color = ('red',)
         self.__isRunning = False
         self.size = (640, 480)
@@ -149,6 +146,3 @@ if __name__ == '__main__':
                 
     my_camera.camera_close()
     cv2.destroyAllWindows()
-
-
-
