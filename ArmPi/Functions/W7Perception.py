@@ -36,7 +36,7 @@ class Perception:
         self.last_x, self.last_y = 0, 0
 
     def setTargetColor(self, target_color):
-        self.__target_color = target_color
+        self.__target_color = target_color[0]  # Extract the color string from the tuple
         return (True, ())
 
     def getAreaMaxContour(self, contours):
