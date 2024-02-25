@@ -121,22 +121,6 @@ class ObjectTracker:
 
         return area_max_contour, contour_area_max
 
-    def get_mask_roi(self, frame, roi, size):
-        # Implement this method based on your requirement
-        return frame
-
-    def get_roi_from_box(self, box):
-        # Implement this method based on your requirement
-        return (0, 0)
-
-    def get_center(self, rect, roi, size, square_length):
-        # Implement this method based on your requirement
-        return 0, 0
-
-    def convert_coordinate(self, img_centerx, img_centery, size):
-        # Implement this method based on your requirement
-        return 0, 0
-
 if __name__ == '__main__':
     tracker = ObjectTracker()
     tracker.start()
