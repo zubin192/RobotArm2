@@ -69,6 +69,8 @@ class ObjectTracker:
     def run(self, img):
         if not self.is_running:
             return img
+        
+        t1 = time.time()  # Initialize t1 here
 
         img_copy = img.copy()
         img_h, img_w = img.shape[:2]
@@ -134,6 +136,7 @@ class ObjectTracker:
                     self.center_list = []
 
         return img
+
 
     def get_mask_roi(self, frame, roi, size):
         return frame
