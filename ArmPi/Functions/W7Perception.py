@@ -12,20 +12,7 @@ from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
- 
-if sys.version_info.major == 2:
-    print('Please run this program with python3!')
-    sys.exit(0)
- 
-AK = ArmIK()
- 
-range_rgb = {
-    'red': (0, 0, 255),
-    'blue': (255, 0, 0),
-    'green': (0, 255, 0),
-    'black': (0, 0, 0),
-    'white': (255, 255, 255),
-}
+
  
 __target_color = ('red',)
 # Set the detection color
