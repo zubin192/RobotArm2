@@ -13,7 +13,7 @@ from ArmIK.ArmMoveIK import *
 
 # Initialize ArmIK and Camera
 AK = ArmIK()
-my_camera = Camera()
+my_camera = Camera.Camera()
 my_camera.camera_open()
 
 # Set colors and parameters for perception
