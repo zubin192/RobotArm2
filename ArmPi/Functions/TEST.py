@@ -47,10 +47,10 @@ class Perception:
 
             blocks = self.find_blocks(frame)
             
-            # Draw rectangles around detected blocks
+            # Draw rectangles around detected blocks and display coordinates
             for color, (cx, cy) in blocks:
                 cv2.rectangle(frame, (cx - 20, cy - 20), (cx + 20, cy + 20), self.target_colors[color], 2)
-                cv2.putText(frame, color, (cx - 20, cy - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, self.target_colors[color], 2)
+                cv2.putText(frame, f'{color} ({cx}, {cy})', (cx - 20, cy - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, self.target_colors[color], 2)
 
             cv2.imshow('Frame', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
