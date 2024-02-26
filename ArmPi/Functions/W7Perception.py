@@ -1,89 +1,101 @@
 #!/usr/bin/python3
 # coding=utf8
+import sys
+sys.path.append('/home/pi/ArmPi/')
 import cv2
+import time
+import Camera
+from LABConfig import *
+from ArmIK.Transform import *
+from ArmIK.ArmMoveIK import *
+import HiwonderSDK.Board as Board
+from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
 class Perception:
-    def __init__(self):
-        self.color_range = {
-            'red': ([0, 120, 120], [10, 255, 255]),
-            'blue': ([110, 50, 50], [130, 255, 255]),
-            'green': ([50, 50, 50], [70, 255, 255])
-        }
+    range_rgb = {
+        'red': (0, 0, 255),
+        'blue': (255, 0, 0),
+        'green': (0, 255, 0),
+        'black': (0, 0, 0),
+        'white': (255, 255, 255),
+    }
 
-    def _getAreaMaxContour(self, contours):
+    def __init__(self):
+        self.__target_color = ('red', 'blue', 'green')
+        self.__isRunning = False
+        self.size = (640, 480)
+
+    def setTargetColor(self, target_color):
+        self.__target_color = target_color
+        return (True, ())
+
+    def getAreaMaxContour(self, contours):
+        contour_area_temp = 0
         contour_area_max = 0
         area_max_contour = None
 
         for c in contours:
-            contour_area_temp = cv2.contourArea(c)
+            contour_area_temp = math.fabs(cv2.contourArea(c))
             if contour_area_temp > contour_area_max:
                 contour_area_max = contour_area_temp
                 if contour_area_temp > 300:
                     area_max_contour = c
 
-        return area_max_contour
+        return area_max_contour, contour_area_max
 
-    def _getMaskROI(self, frame, roi, size):
-        x, y, w, h = roi
-        mask_roi = np.zeros(size, dtype=np.uint8)
-        mask_roi[y:y+h, x:x+w] = frame[y:y+h, x:x+w]
-        return mask_roi
+    def start(self):
+        self.__isRunning = True
+        print("ColorTracking Start")
 
-    def colorTracking(self, img):
-        img_h, img_w = img.shape[:2]
-        size = (640, 480)
-        frame_resize = cv2.resize(img, size, interpolation=cv2.INTER_NEAREST)
+    def stop(self):
+        self.__isRunning = False
+        print("ColorTracking Stop")
+
+    def exit(self):
+        self.__isRunning = False
+        print("ColorTracking Exit")
+
+    def run(self, img):
+        if not self.__isRunning:
+            return img
+
+        frame_resize = cv2.resize(img, self.size, interpolation=cv2.INTER_NEAREST)
         frame_gb = cv2.GaussianBlur(frame_resize, (11, 11), 11)
         frame_lab = cv2.cvtColor(frame_gb, cv2.COLOR_BGR2LAB)
-        detected_colors = {}
 
-        for color, (lower, upper) in self.color_range.items():
-            mask = cv2.inRange(frame_lab, np.array(lower), np.array(upper))
-            contours = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
-            areaMaxContour = self._getAreaMaxContour(contours)
-            
-            if areaMaxContour is not None:
-                rect = cv2.minAreaRect(areaMaxContour)
-                box = np.int0(cv2.boxPoints(rect))
-                x, y, w, h = cv2.boundingRect(areaMaxContour)
-                roi = (x, y, w, h)
-                mask_roi = self._getMaskROI(mask, roi, size)
-                detected_colors[color] = {
-                    'contour': areaMaxContour,
-                    'rect': rect,
-                    'roi': roi,
-                    'mask_roi': mask_roi
-                }
+        for i in color_range:
+            if i in self.__target_color:
+                detect_color = i
+                frame_mask = cv2.inRange(frame_lab, color_range[detect_color][0], color_range[detect_color][1])
+                opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8))
+                closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6, 6), np.uint8))
+                contours = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
+                areaMaxContour, area_max = self.getAreaMaxContour(contours)
+                if area_max > 2500:
+                    rect = cv2.minAreaRect(areaMaxContour)
+                    box = np.int0(cv2.boxPoints(rect))
+                    img_centerx, img_centery = getCenter(rect, self.size, square_length)
+                    world_x, world_y = convertCoordinate(img_centerx, img_centery, self.size)
+                    cv2.drawContours(img, [box], -1, self.range_rgb[detect_color], 2)
+                    cv2.putText(img, '(' + str(world_x) + ',' + str(world_y) + ')', (min(box[0, 0], box[2, 0]), box[2, 1] - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.range_rgb[detect_color], 1)
 
-        return detected_colors
+        return img
 
 if __name__ == '__main__':
     perception = Perception()
-    my_camera = cv2.VideoCapture(0)
-    if not my_camera.isOpened():
-        print("Error: Unable to open camera.")
-        exit()
-    
+    perception.start()
+    my_camera = Camera.Camera()
+    my_camera.camera_open()
     while True:
-        ret, frame = my_camera.read()
-        if not ret:
-            print("Error: Unable to capture frame.")
-            break
-        
-        detected_colors = perception.colorTracking(frame)
-
-        for color, data in detected_colors.items():
-            contour = data['contour']
-            rect = data['rect']
-            roi = data['roi']
-            mask_roi = data['mask_roi']
-            # Process detected colors as needed
-            
-        cv2.imshow('Frame', frame)
-        key = cv2.waitKey(1)
-        if key == 27:
-            break
-    
-    my_camera.release()
+        img = my_camera.frame
+        if img is not None:
+            frame = img.copy()
+            Frame = perception.run(frame)
+            cv2.imshow('Frame', Frame)
+            key = cv2.waitKey(1)
+            if key == 27:
+                break
+    my_camera.camera_close()
     cv2.destroyAllWindows()
