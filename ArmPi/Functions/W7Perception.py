@@ -5,7 +5,6 @@ import cv2
 import numpy as np
 import math
 import time
-from Camera import Camera
 
 class ColorPerception:
     def __init__(self):
@@ -106,7 +105,7 @@ class ColorPerception:
                 self.roi = self.getROI(box)
                 self.get_roi = True
 
-                img_centerx, img_centery = self.getCenter(self.rect, self.roi, self.size, square_length)
+                img_centerx, img_centery = self.getCenter(self.rect, self.roi, self.size)
                 self.world_x, self.world_y = self.convertCoordinate(img_centerx, img_centery, self.size)
 
                 cv2.drawContours(img, [box], -1, self.range_rgb[self.detect_color], 2)
@@ -153,7 +152,7 @@ class ColorPerception:
         y_max = max(box[:, 1])
         return (x_min, y_min, x_max, y_max)
 
-    def getCenter(self, rect, roi, size, square_length):
+    def getCenter(self, rect, roi, size):
         box = np.int0(cv2.boxPoints(rect))
         x_min, y_min, x_max, y_max = roi
         img_centerx = int((x_min + x_max) / 2)
@@ -166,18 +165,19 @@ class ColorPerception:
         return world_x, world_y
 
 if __name__ == '__main__':
-    my_camera = Camera()
-    my_camera.camera_open()
+    color_perception = ColorPerception()
+    color_perception.start()
 
     while True:
-        img = my_camera.frame
-        if img is not None:
-            frame = img.copy()
-            processed_frame = color_perception.run(frame)
-            cv2.imshow('Processed Frame', processed_frame)
-            key = cv2.waitKey(1)
-            if key == 27:
-                break
+        # Here you would capture the frame from your camera
+        # Replace this line with your camera capture code
+        img = np.zeros((480, 640, 3), dtype=np.uint8)  # Placeholder for captured frame
 
-    my_camera.camera_close()
+        frame = img.copy()
+        processed_frame = color_perception.run(frame)
+        cv2.imshow('Processed Frame', processed_frame)
+        key = cv2.waitKey(1)
+        if key == 27:
+            break
+
     cv2.destroyAllWindows()
