@@ -1,6 +1,17 @@
+#!/usr/bin/python3
+# coding=utf8
+import sys
+sys.path.append('/home/pi/ArmPi/')
 import cv2
+import time
+import Camera
+import threading
+from LABConfig import *
+from ArmIK.Transform import *
+from ArmIK.ArmMoveIK import *
+import HiwonderSDK.Board as Board
+from CameraCalibration.CalibrationConfig import *
 import numpy as np
-import math
 
 class ObjectTracker:
     def __init__(self):
@@ -111,13 +122,26 @@ class ObjectTracker:
         return area_max_contour, contour_area_max
 
     def get_roi_from_box(self, box):
-        # Extract the region of interest (ROI) from the bounding box
         x_values = [point[0] for point in box]
         y_values = [point[1] for point in box]
         min_x, min_y = min(x_values), min(y_values)
         max_x, max_y = max(x_values), max(y_values)
         roi = (min_x, min_y, max_x - min_x, max_y - min_y)  # Format: (x, y, width, height)
         return roi
+
+    def get_center(self, rect, roi, size, square_length):
+        # Assuming rect is in the format of ((center_x, center_y), (width, height), angle)
+        center_x, center_y = rect[0]
+        img_centerx = int(size[0] * (center_x - roi[0]) / roi[2])
+        img_centery = int(size[1] * (center_y - roi[1]) / roi[3])
+        return img_centerx, img_centery
+
+    def convert_coordinate(self, img_centerx, img_centery, size):
+        # Placeholder function for coordinate conversion
+        world_x = img_centerx
+        world_y = img_centery
+        return world_x, world_y
+
 
 if __name__ == '__main__':
     tracker = ObjectTracker()
