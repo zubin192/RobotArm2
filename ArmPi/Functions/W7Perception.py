@@ -27,14 +27,6 @@ class Perception:
         self.__isRunning = False
         self.rect = None
         self.size = (640, 480)
-        self.rotation_angle = 0
-        self.unreachable = False
-        self.world_X, self.world_Y = 0, 0
-        self.world_x, self.world_y = 0, 0
-        self.t1 = 0
-        self.roi = ()
-        self.get_roi = False
-        self.last_x, self.last_y = 0, 0
         self.my_camera = Camera.Camera()
         self.my_camera.camera_open()
 
@@ -58,14 +50,6 @@ class Perception:
     def start(self):
         self.__isRunning = True
         print("ColorTracking Start")
-
-    def stop(self):
-        self.__isRunning = False
-        print("ColorTracking Stop")
-
-    def exit(self):
-        self.__isRunning = False
-        print("ColorTracking Exit")
 
     def run(self, img):
         positions = {'red': None, 'blue': None, 'green': None}
