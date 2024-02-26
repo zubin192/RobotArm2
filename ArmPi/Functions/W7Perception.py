@@ -67,43 +67,20 @@ class ObjectTracker:
                 contours = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
                 areaMaxContour, area_max = self.get_area_max_contour(contours)
 
-            if area_max > 2500:
-                rect = cv2.minAreaRect(areaMaxContour)
-                box = np.int0(cv2.boxPoints(rect))
+                if area_max > 2500:
+                    rect = cv2.minAreaRect(areaMaxContour)
+                    box = np.int0(cv2.boxPoints(rect))
 
-                self.roi = self.get_roi_from_box(box)
-                self.get_roi = True
+                    self.roi = self.get_roi_from_box(box)
+                    self.get_roi = True
 
-                img_centerx, img_centery = self.get_center(rect, self.roi, self.size, self.square_length)
-                self.world_x, self.world_y = self.convert_coordinate(img_centerx, img_centery, self.size)
+                    img_centerx, img_centery = self.get_center(rect, self.roi, self.size, self.square_length)
+                    self.world_x, self.world_y = self.convert_coordinate(img_centerx, img_centery, self.size)
 
-                cv2.drawContours(frame, [box], -1, (0, 0, 255), 2)
-                cv2.putText(frame, '(' + str(self.world_x) + ',' + str(self.world_y) + ')',
-                            (min(box[0, 0], box[2, 0]), box[2, 1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                            (0, 0, 255), 1)
-
-                distance = math.sqrt(pow(self.world_x - self.last_x, 2) + pow(self.world_y - self.last_y, 2))
-                self.last_x, self.last_y = self.world_x, self.world_y
-                self.track = True
-
-                if distance < 0.3:
-                    self.center_list.extend((self.world_x, self.world_y))
-                    self.count += 1
-                    if self.start_count_t1:
-                        self.start_count_t1 = False
-                        self.t1 = time.time()
-                    if time.time() - self.t1 > 1.5:
-                        self.rotation_angle = rect[2]
-                        self.start_count_t1 = True
-                        self.world_X, self.world_Y = np.mean(np.array(self.center_list).reshape(self.count, 2), axis=0)
-                        self.count = 0
-                        self.center_list = []
-                        self.start_pick_up = True
-                else:
-                    self.t1 = time.time()
-                    self.start_count_t1 = True
-                    self.count = 0
-                    self.center_list = []
+                    cv2.drawContours(frame, [box], -1, (0, 0, 255), 2)
+                    cv2.putText(frame, '(' + str(self.world_x) + ',' + str(self.world_y) + ')',
+                                (min(box[0, 0], box[2, 0]), box[2, 1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                                (0, 0, 255), 1)
 
         return frame
 
