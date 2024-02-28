@@ -19,24 +19,27 @@ servo3 = 500
 servo4 = 500
 servo5 = 500
 
-Board.setBusServoPulse(1, servo1) # Servo 1
-Board.setBusServoPulse(2, servo2) # Servo 2
-Board.setBusServoPulse(3, servo3) # Servo 3
-Board.setBusServoPulse(4, servo4) # Servo 4
-Board.setBusServoPulse(5, servo5) # Servo 5
+# Set the servo positions with a use_time of 1000ms
+Board.setBusServoPulse(1, servo1, 1000) # Servo 1
+Board.setBusServoPulse(2, servo2, 1000) # Servo 2
+Board.setBusServoPulse(3, servo3, 1000) # Servo 3
+Board.setBusServoPulse(4, servo4, 1000) # Servo 4
+Board.setBusServoPulse(5, servo5, 1000) # Servo 5
 
 time.sleep(1)
 
+# Change the servo positions
 servo1 = 600
 servo2 = 600
 servo3 = 600
 servo4 = 600
 servo5 = 600
 
-Board.setBusServoPulse(1, servo1) # Servo 1
-Board.setBusServoPulse(2, servo2) # Servo 2
-Board.setBusServoPulse(3, servo3) # Servo 3
-Board.setBusServoPulse(4, servo4) # Servo 4
-Board.setBusServoPulse(5, servo5) # Servo 5
+# Set the new servo positions with a use_time of 1000ms
+Board.setBusServoPulse(1, servo1, 1000) # Servo 1
+Board.setBusServoPulse(2, servo2, 1000) # Servo 2
+Board.setBusServoPulse(3, servo3, 1000) # Servo 3
+Board.setBusServoPulse(4, servo4, 1000) # Servo 4
+Board.setBusServoPulse(5, servo5, 1000) # Servo 5
 
 time.sleep(1)
