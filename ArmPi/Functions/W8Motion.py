@@ -30,22 +30,31 @@ def setBuzzer(timer):
     Board.setBuzzer(0)
 
 # Mechanical arm movement thread
-def move():
+def move(target_position, pitch, roll, yaw):
     global servo1
-    while True:
-        Board.setBusServoPulse(1, servo1 - 280, 500)  # Open the gripper
-        time.sleep(0.8)
-        Board.setBusServoPulse(1, servo1, 500)  # Close the gripper
-        time.sleep(1)
-        initMove()  # Return to the initial position
-        time.sleep(1.5)
+    Board.setBusServoPulse(1, servo1 - 280, 500)  # Open the gripper
+    time.sleep(0.8)
+    Board.setBusServoPulse(1, servo1, 500)  # Close the gripper
+    time.sleep(1)
+    initMove()  # Return to the initial position
+    time.sleep(1.5)
 
-# Run the sub-thread
-th = threading.Thread(target=move)
-th.setDaemon(True)
-th.start()
+    # Move the end effector to the target position
+    AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
+    time.sleep(1.5)
 
 if __name__ == '__main__':
     initMove()
     while True:
-        time.sleep(1)
+        # Get the target position and the pitch, roll, and yaw angles from the terminal
+        x = float(input("Enter the x-coordinate: "))
+        y = float(input("Enter the y-coordinate: "))
+        z = float(input("Enter the z-coordinate: "))
+        target_position = (x, y, z)
+
+        pitch = float(input("Enter the pitch angle: "))
+        roll = float(input("Enter the roll angle: "))
+        yaw = float(input("Enter the yaw angle: "))
+
+        # Run the move function with the input values
+        move(target_position, pitch, roll, yaw)
