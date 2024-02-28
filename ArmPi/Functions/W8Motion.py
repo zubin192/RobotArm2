@@ -27,7 +27,7 @@ Board.setBusServoPulse(5, servo5, 1000)
 
 time.sleep(1)
 
-servo1 = 600
+servo2 = 600
 
 
 Board.setBusServoPulse(1, servo1, 1000) 
