@@ -18,22 +18,25 @@ servo2 = 500
 servo3 = 500
 servo4 = 500
 servo5 = 500
+servo6 = 500
 
 Board.setBusServoPulse(1, servo1, 1000) 
 Board.setBusServoPulse(2, servo2, 1000) 
 Board.setBusServoPulse(3, servo3, 1000) 
 Board.setBusServoPulse(4, servo4, 1000) 
-Board.setBusServoPulse(5, servo5, 1000) 
+Board.setBusServoPulse(5, servo5, 1000)
+Board.setBusServoPulse(6, servo6, 1000)
 
 time.sleep(1)
 
-servo4 = 600
+servo6 = 600
 
 
 Board.setBusServoPulse(1, servo1, 1000) 
 Board.setBusServoPulse(2, servo2, 1000) 
 Board.setBusServoPulse(3, servo3, 1000) 
 Board.setBusServoPulse(4, servo4, 1000) 
-Board.setBusServoPulse(5, servo5, 1000) 
+Board.setBusServoPulse(5, servo5, 1000)
+Board.setBusServoPulse(6, servo6, 1000) 
 
 time.sleep(1)
