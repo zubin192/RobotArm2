@@ -12,20 +12,6 @@ from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
- 
-#!/usr/bin/python3
-# coding=utf8
-import sys
-sys.path.append('/home/pi/ArmPi/')
-import time
-import threading
-from ArmIK.Transform import *
-from ArmIK.ArmMoveIK import *
-import HiwonderSDK.Board as Board
-
-if sys.version_info.major == 2:
-    print('Please run this program with python3!')
-    sys.exit(0)
 
 AK = ArmIK()
 
