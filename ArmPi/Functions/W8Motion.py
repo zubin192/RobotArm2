@@ -12,31 +12,54 @@ from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
+ 
+#!/usr/bin/python3
+# coding=utf8
+import sys
+sys.path.append('/home/pi/ArmPi/')
+import time
+import threading
+from ArmIK.Transform import *
+from ArmIK.ArmMoveIK import *
+import HiwonderSDK.Board as Board
 
-servo1 = 500 
-servo2 = 500
-servo3 = 500
-servo4 = 500
-servo5 = 500
-servo6 = 500
+if sys.version_info.major == 2:
+    print('Please run this program with python3!')
+    sys.exit(0)
 
-Board.setBusServoPulse(1, servo1, 1000) 
-Board.setBusServoPulse(2, servo2, 1000) 
-Board.setBusServoPulse(3, servo3, 1000) 
-Board.setBusServoPulse(4, servo4, 1000) 
-Board.setBusServoPulse(5, servo5, 1000)
-Board.setBusServoPulse(6, servo6, 1000)
+AK = ArmIK()
 
-time.sleep(1)
+servo1 = 700
 
-servo6 = 600
+# Initial position
+def initMove():
+    Board.setBusServoPulse(1, servo1 - 50, 300)
+    Board.setBusServoPulse(2, 500, 500)
+    AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
+def setBuzzer(timer):
+    Board.setBuzzer(0)
+    Board.setBuzzer(1)
+    time.sleep(timer)
+    Board.setBuzzer(0)
 
-Board.setBusServoPulse(1, servo1, 1000) 
-Board.setBusServoPulse(2, servo2, 1000) 
-Board.setBusServoPulse(3, servo3, 1000) 
-Board.setBusServoPulse(4, servo4, 1000) 
-Board.setBusServoPulse(5, servo5, 1000)
-Board.setBusServoPulse(6, servo6, 1000) 
+# Mechanical arm movement thread
+def move():
+    global servo1
+    while True:
+        Board.setBusServoPulse(1, servo1 - 280, 500)  # Open the gripper
+        time.sleep(0.8)
+        Board.setBusServoPulse(1, servo1, 500)  # Close the gripper
+        time.sleep(1)
+        initMove()  # Return to the initial position
+        time.sleep(1.5)
 
-time.sleep(1)
+# Run the sub-thread
+th = threading.Thread(target=move)
+th.setDaemon(True)
+th.start()
+
+if __name__ == '__main__':
+    initMove()
+    while True:
+        time.sleep(1)
