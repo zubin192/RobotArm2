@@ -15,7 +15,7 @@ import numpy as np
 
 AK = ArmIK()
 
-servo1 = 700
+servo1 = 500
 
 def initMove():
     Board.setBusServoPulse(1, servo1 - 50, 300)
