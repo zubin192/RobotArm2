@@ -17,44 +17,27 @@ AK = ArmIK()
 
 servo1 = 700
 
-# Initial position
 def initMove():
     Board.setBusServoPulse(1, servo1 - 50, 300)
     Board.setBusServoPulse(2, 500, 500)
     AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
-def setBuzzer(timer):
-    Board.setBuzzer(0)
-    Board.setBuzzer(1)
-    time.sleep(timer)
-    Board.setBuzzer(0)
-
-# Mechanical arm movement thread
-def move(target_position, pitch, roll, yaw):
-    global servo1
-    Board.setBusServoPulse(1, servo1 - 280, 500)  # Open the gripper
-    time.sleep(0.8)
-    Board.setBusServoPulse(1, servo1, 500)  # Close the gripper
-    time.sleep(1)
-    initMove()  # Return to the initial position
-    time.sleep(1.5)
-
-    # Move the end effector to the target position
+def moveArm(target_position, pitch, roll, yaw):
     AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
-    time.sleep(1.5)
 
 if __name__ == '__main__':
     initMove()
-    while True:
-        # Get the target position and the pitch, roll, and yaw angles from the terminal
-        x = float(input("Enter the x-coordinate: "))
-        y = float(input("Enter the y-coordinate: "))
-        z = float(input("Enter the z-coordinate: "))
-        target_position = (x, y, z)
+    time.sleep(2)  # Wait for the arm to reach the initial position
 
-        pitch = float(input("Enter the pitch angle: "))
-        roll = float(input("Enter the roll angle: "))
-        yaw = float(input("Enter the yaw angle: "))
+    # Get the target position and the pitch, roll, and yaw angles from the user
+    x = float(input("Enter the x-coordinate: "))
+    y = float(input("Enter the y-coordinate: "))
+    z = float(input("Enter the z-coordinate: "))
+    target_position = (x, y, z)
 
-        # Run the move function with the input values
-        move(target_position, pitch, roll, yaw)
+    pitch = float(input("Enter the pitch angle: "))
+    roll = float(input("Enter the roll angle: "))
+    yaw = float(input("Enter the yaw angle: "))
+
+    # Move the arm to the specified position
+    moveArm(target_position, pitch, roll, yaw)
