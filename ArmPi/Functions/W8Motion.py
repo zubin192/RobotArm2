@@ -25,6 +25,12 @@ def initMove():
 def moveArm(target_position, pitch, roll, yaw):
     AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
 
+def openGripper():
+    Board.setBusServoPulse(1, servo1 - 280, 500)  # Open the gripper
+
+def closeGripper():
+    Board.setBusServoPulse(1, servo1, 500)  # Close the gripper
+
 if __name__ == '__main__':
     initMove()
     time.sleep(2)  # Wait for the arm to reach the initial position
@@ -41,3 +47,12 @@ if __name__ == '__main__':
 
     # Move the arm to the specified position
     moveArm(target_position, pitch, roll, yaw)
+
+    # Open the gripper to pick up the block
+    openGripper()
+
+    # Wait for some time to simulate picking up the block
+    time.sleep(2)
+
+    # Close the gripper after picking up the block
+    closeGripper()
