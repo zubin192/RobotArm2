@@ -56,3 +56,5 @@ if __name__ == '__main__':
 
     # Close the gripper after picking up the block
     closeGripper()
+
+    initMove()  # Move the arm back to the initial position
