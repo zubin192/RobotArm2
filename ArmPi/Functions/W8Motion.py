@@ -13,38 +13,45 @@ import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
-class ArmController:
-    def __init__(self):
-        self.AK = ArmIK()
-        self.servo1 = 500
+AK = ArmIK()
 
-    def initMove(self):
-        Board.setBusServoPulse(1, self.servo1 - 50, 300)
-        Board.setBusServoPulse(2, 500, 500)
-        self.AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
+servo1 = 500
 
-    def moveArm(self, target_position):
-        # Set pitch, roll, and yaw to fixed values
-        self.AK.setPitchRangeMoving(target_position, -30, -30, -90, 1500)
+def initMove():
+    Board.setBusServoPulse(1, servo1 - 50, 300)
+    Board.setBusServoPulse(2, 500, 500)
+    AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
-    def openGripper(self):
-        Board.setBusServoPulse(1, self.servo1 - 280, 500)
+def moveArm(target_position):
+    # Removed pitch, roll, and yaw parameters
+    AK.setPitchRangeMoving(target_position, 1500)
 
-    def closeGripper(self):
-        Board.setBusServoPulse(1, self.servo1, 500)
+def openGripper():
+    Board.setBusServoPulse(1, servo1 - 280, 500)  # Open the gripper
+
+def closeGripper():
+    Board.setBusServoPulse(1, servo1, 500)  # Close the gripper
 
 if __name__ == '__main__':
-    controller = ArmController()
-    controller.initMove()
-    time.sleep(2)
+    initMove()
+    time.sleep(2)  # Wait for the arm to reach the initial position
 
+    # Get the target position from the user
     x = float(input("Enter the x-coordinate: "))
     y = float(input("Enter the y-coordinate: "))
     z = float(input("Enter the z-coordinate: "))
     target_position = (x, y, z)
 
-    controller.moveArm(target_position)
-    controller.openGripper()
+    # Move the arm to the specified position
+    moveArm(target_position)
+
+    # Open the gripper to pick up the block
+    openGripper()
+
+    # Wait for some time to simulate picking up the block
     time.sleep(2)
-    controller.closeGripper()
-    controller.initMove()
+
+    # Close the gripper after picking up the block
+    closeGripper()
+
+    initMove()  # Move the arm back to the initial position
