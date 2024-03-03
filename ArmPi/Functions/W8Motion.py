@@ -24,7 +24,8 @@ class ArmController:
         self.AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
     def moveArm(self, target_position):
-        self.AK.setPitchRangeMoving(target_position, 1500)
+        # Set pitch, roll, and yaw to fixed values
+        self.AK.setPitchRangeMoving(target_position, -30, -30, -90, 1500)
 
     def openGripper(self):
         Board.setBusServoPulse(1, self.servo1 - 280, 500)
