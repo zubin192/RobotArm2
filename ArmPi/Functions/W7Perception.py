@@ -4,15 +4,14 @@ import sys
 sys.path.append('/home/pi/ArmPi/')
 import cv2
 import time
+import Camera
 import threading
-import math
-import numpy as np
 from LABConfig import *
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
-from ArmPi.Camera import Camera
+import numpy as np
 
 range_rgb = {
     'red': (0, 0, 255),
@@ -28,7 +27,7 @@ class Perception:
         self.__isRunning = False
         self.rect = None
         self.size = (640, 480)
-        self.my_camera = Camera()
+        self.my_camera = Camera.Camera()
         self.my_camera.camera_open()
 
     def setTargetColor(self, target_color):
@@ -60,6 +59,8 @@ class Perception:
 
         img_copy = img.copy()
         img_h, img_w = img.shape[:2]
+        cv2.line(img, (0, int(img_h / 2)), (img_w, int(img_h / 2)), (0, 0, 200), 1)
+        cv2.line(img, (int(img_w / 2), 0), (int(img_w / 2), img_h), (0, 0, 200), 1)
 
         if not self.__isRunning:
             return img
@@ -96,9 +97,6 @@ class Perception:
                     cv2.drawContours(img, [box], -1, range_rgb[detect_color], 2)
                     cv2.putText(img, '(' + str(world_x) + ',' + str(world_y) + ')', (min(box[0, 0], box[2, 0]), box[2, 1] - 10),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, range_rgb[detect_color], 1)
-
-                    # Drawing a line across the detected block object along the X-axis
-                    cv2.line(img, (min(box[:, 0]), img_centery), (max(box[:, 0]), img_centery), (255, 255, 255), 2)
 
         print('Positions:', positions)
         print('Locations:', locations)
