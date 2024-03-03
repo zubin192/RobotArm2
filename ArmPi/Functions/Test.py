@@ -64,14 +64,20 @@ def main():
     motion_controller = RoboticArmMotionControl()
     motion_controller.start()
 
-    # Get target coordinates for the arm to pick up the block from user input
-    x = float(input("Enter the X coordinate: "))
-    y = float(input("Enter the Y coordinate: "))
-    z = float(input("Enter the Z coordinate: "))
+    # Accept input from terminal for XYZ coordinates
+    while True:
+        try:
+            x = float(input("Enter X coordinate: "))
+            y = float(input("Enter Y coordinate: "))
+            z = float(input("Enter Z coordinate: "))
+            motion_controller.set_target_coordinates((x, y, z))
+            time.sleep(2)  # Add a delay before accepting new coordinates
+        except ValueError:
+            print("Invalid input. Please enter numerical values.")
 
-    # Set target coordinates for the arm
-    motion_controller.set_target_coordinates((x, y, z))
+    # Uncomment the lines below if you want to stop the motion control after a certain time
+    # time.sleep(60)  # Wait for 60 seconds
+    # motion_controller.stop()
 
-    # Wait for some time before stopping the motion control
-    time.sleep(5)
-    motion_controller.stop()
+if __name__ == '__main__':
+    main()
