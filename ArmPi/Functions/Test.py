@@ -64,12 +64,14 @@ def main():
     motion_controller = RoboticArmMotionControl()
     motion_controller.start()
 
-    # Set target coordinates for the arm to pick up the block
-    motion_controller.set_target_coordinates((10, 10, 10))  # Example coordinates, replace with actual values
+    # Get target coordinates for the arm to pick up the block from user input
+    x = float(input("Enter the X coordinate: "))
+    y = float(input("Enter the Y coordinate: "))
+    z = float(input("Enter the Z coordinate: "))
+
+    # Set target coordinates for the arm
+    motion_controller.set_target_coordinates((x, y, z))
 
     # Wait for some time before stopping the motion control
     time.sleep(5)
     motion_controller.stop()
-
-if __name__ == '__main__':
-    main()
