@@ -12,6 +12,7 @@ from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
+from ArmPi.Camera import Camera
 
 range_rgb = {
     'red': (0, 0, 255),
@@ -27,7 +28,7 @@ class Perception:
         self.__isRunning = False
         self.rect = None
         self.size = (640, 480)
-        self.my_camera = Camera.Camera()
+        self.my_camera = Camera()
         self.my_camera.camera_open()
 
     def setTargetColor(self, target_color):
