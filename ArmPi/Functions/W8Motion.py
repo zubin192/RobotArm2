@@ -13,45 +13,37 @@ import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
-AK = ArmIK()
+class ArmController:
+    def __init__(self):
+        self.AK = ArmIK()
+        self.servo1 = 500
 
-servo1 = 500
+    def initMove(self):
+        Board.setBusServoPulse(1, self.servo1 - 50, 300)
+        Board.setBusServoPulse(2, 500, 500)
+        self.AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
-def initMove():
-    Board.setBusServoPulse(1, servo1 - 50, 300)
-    Board.setBusServoPulse(2, 500, 500)
-    AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
+    def moveArm(self, target_position):
+        self.AK.setPitchRangeMoving(target_position, 1500)
 
-def moveArm(target_position):
-    # Removed pitch, roll, and yaw parameters
-    AK.setPitchRangeMoving(target_position, 1500)
+    def openGripper(self):
+        Board.setBusServoPulse(1, self.servo1 - 280, 500)
 
-def openGripper():
-    Board.setBusServoPulse(1, servo1 - 280, 500)  # Open the gripper
-
-def closeGripper():
-    Board.setBusServoPulse(1, servo1, 500)  # Close the gripper
+    def closeGripper(self):
+        Board.setBusServoPulse(1, self.servo1, 500)
 
 if __name__ == '__main__':
-    initMove()
-    time.sleep(2)  # Wait for the arm to reach the initial position
+    controller = ArmController()
+    controller.initMove()
+    time.sleep(2)
 
-    # Get the target position from the user
     x = float(input("Enter the x-coordinate: "))
     y = float(input("Enter the y-coordinate: "))
     z = float(input("Enter the z-coordinate: "))
     target_position = (x, y, z)
 
-    # Move the arm to the specified position
-    moveArm(target_position)
-
-    # Open the gripper to pick up the block
-    openGripper()
-
-    # Wait for some time to simulate picking up the block
+    controller.moveArm(target_position)
+    controller.openGripper()
     time.sleep(2)
-
-    # Close the gripper after picking up the block
-    closeGripper()
-
-    initMove()  # Move the arm back to the initial position
+    controller.closeGripper()
+    controller.initMove()
