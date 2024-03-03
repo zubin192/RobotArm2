@@ -22,9 +22,8 @@ def initMove():
     Board.setBusServoPulse(2, 500, 500)
     AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
-def moveArm(target_position):
-    # Removed pitch, roll, and yaw parameters
-    AK.setPitchRangeMoving(target_position, 1500)
+def moveArm(target_position, pitch, roll, yaw):
+    AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
 
 def openGripper():
     Board.setBusServoPulse(1, servo1 - 280, 500)  # Open the gripper
@@ -36,14 +35,18 @@ if __name__ == '__main__':
     initMove()
     time.sleep(2)  # Wait for the arm to reach the initial position
 
-    # Get the target position from the user
+    # Get the target position and the pitch, roll, and yaw angles from the user
     x = float(input("Enter the x-coordinate: "))
     y = float(input("Enter the y-coordinate: "))
     z = float(input("Enter the z-coordinate: "))
     target_position = (x, y, z)
 
+    pitch = float(input("Enter the pitch angle: "))
+    roll = float(input("Enter the roll angle: "))
+    yaw = float(input("Enter the yaw angle: "))
+
     # Move the arm to the specified position
-    moveArm(target_position)
+    moveArm(target_position, pitch, roll, yaw)
 
     # Open the gripper to pick up the block
     openGripper()
@@ -54,4 +57,4 @@ if __name__ == '__main__':
     # Close the gripper after picking up the block
     closeGripper()
 
-    initMove()  # Move the arm back to the initial position
+    initMove()  # Return to the initial position
