@@ -6,12 +6,13 @@ import cv2
 import time
 import Camera
 import threading
+import math
+import numpy as np
 from LABConfig import *
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
-import numpy as np
 
 range_rgb = {
     'red': (0, 0, 255),
@@ -59,8 +60,9 @@ class Perception:
 
         img_copy = img.copy()
         img_h, img_w = img.shape[:2]
+
+        # Draw a line across the middle of the block along the X-axis
         cv2.line(img, (0, int(img_h / 2)), (img_w, int(img_h / 2)), (0, 0, 200), 1)
-        cv2.line(img, (int(img_w / 2), 0), (int(img_w / 2), img_h), (0, 0, 200), 1)
 
         if not self.__isRunning:
             return img
