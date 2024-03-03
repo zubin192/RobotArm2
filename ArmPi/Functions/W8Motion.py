@@ -24,7 +24,7 @@ def initMove():
 
 def moveArm(target_position):
     # Removed pitch, roll, and yaw parameters
-    AK.setPitchRangeMoving(target_position, -30, -30, -90, 1500)
+    AK.setPitchRangeMoving(target_position, 1500)
 
 def openGripper():
     Board.setBusServoPulse(1, servo1 - 280, 500)  # Open the gripper
