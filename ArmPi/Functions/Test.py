@@ -37,7 +37,9 @@ class RoboticArmMotionControl:
 
         # Initialize other necessary variables for motion control
         self._target_coordinates = None
+        self._target_release_coordinates = None
         self._action_finish = True
+        self._gripped_object = False
         self.robotic_arm = RoboticArm()
 
     def start(self):
@@ -52,6 +54,9 @@ class RoboticArmMotionControl:
     def set_target_coordinates(self, coordinates):
         self._target_coordinates = coordinates
 
+    def set_target_release_coordinates(self, coordinates):
+        self._target_release_coordinates = coordinates
+
     def _move(self):
         while True:
             if self._is_running:
@@ -60,7 +65,17 @@ class RoboticArmMotionControl:
                     x, y, z = self._target_coordinates
                     result = self.robotic_arm.move_arm((x, y, z), -90, -90, 0)
                     time.sleep(result[2] / 1000)
+                    self._gripped_object = True
                     self._target_coordinates = None
+                    self._action_finish = True
+                elif self._gripped_object and self._target_release_coordinates and self._action_finish:
+                    self._action_finish = False
+                    x, y, z = self._target_release_coordinates
+                    result = self.robotic_arm.move_arm((x, y, z), -90, -90, 0)
+                    time.sleep(result[2] / 1000)
+                    self.robotic_arm.open_gripper()
+                    time.sleep(1)  # Wait for the gripper to open
+                    self._gripped_object = False
                     self._action_finish = True
             else:
                 if self._stop:
@@ -78,22 +93,26 @@ def main():
     time.sleep(2)  # Wait for the arm to reach the initial position
 
     # Get the target position from the user
-    x = float(input("Enter the x-coordinate: "))
-    y = float(input("Enter the y-coordinate: "))
-    z = float(input("Enter the z-coordinate: "))
+    x = float(input("Enter the x-coordinate to pick up the object: "))
+    y = float(input("Enter the y-coordinate to pick up the object: "))
+    z = float(input("Enter the z-coordinate to pick up the object: "))
     target_position = (x, y, z)
 
-    # Move the arm to the specified position
+    # Move the arm to the specified position to pick up the object
     motion_controller.set_target_coordinates(target_position)
 
-    # Open the gripper to pick up the block
-    motion_controller.robotic_arm.open_gripper()
+    # Wait until the object is gripped
+    while not motion_controller._gripped_object:
+        time.sleep(0.1)
 
-    # Wait for some time to simulate picking up the block
-    time.sleep(2)
+    # Get the target release position from the user
+    x_release = float(input("Enter the x-coordinate to release the object: "))
+    y_release = float(input("Enter the y-coordinate to release the object: "))
+    z_release = float(input("Enter the z-coordinate to release the object: "))
+    target_release_position = (x_release, y_release, z_release)
 
-    # Close the gripper after picking up the block
-    motion_controller.robotic_arm.close_gripper()
+    # Move the arm to the specified release position
+    motion_controller.set_target_release_coordinates(target_release_position)
 
     # Stop the motion controller
     motion_controller.stop()
