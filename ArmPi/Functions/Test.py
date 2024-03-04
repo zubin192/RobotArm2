@@ -94,13 +94,22 @@ class RoboticArmMotionControl:
                 time.sleep(0.01)
 
 class Perception:
-    def __init__(self):
-        self.__target_color = ('red', 'blue', 'green')
-        self.__isRunning = False
-        self.rect = None
-        self.size = (640, 480)
-        self.my_camera = Camera.Camera()
-        self.my_camera.camera_open()
+    class Perception:
+        def __init__(self):
+            self.__target_color = ('red', 'blue', 'green')
+            self.__isRunning = False
+            self.rect = None
+            self.size = (640, 480)
+            self.my_camera = Camera.Camera()
+            self.my_camera.camera_open()
+
+            self.range_rgb = {
+                'red': (0, 0, 255),
+                'blue': (255, 0, 0),
+                'green': (0, 255, 0),
+                'black': (0, 0, 0),
+                'white': (255, 255, 255),
+            }
 
     def setTargetColor(self, target_color):
         self.__target_color = target_color
