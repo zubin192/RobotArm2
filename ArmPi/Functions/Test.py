@@ -1,14 +1,17 @@
 #!/usr/bin/python3
 # coding=utf8
-
 import sys
-import threading
-import time
+sys.path.append('/home/pi/ArmPi/')
 import cv2
-import numpy as np
-import HiwonderSDK.Board as Board
+import time
+import Camera
+import threading
+from LABConfig import *
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
+import HiwonderSDK.Board as Board
+from CameraCalibration.CalibrationConfig import *
+import numpy as np
 
 class RoboticArm:
     def __init__(self):
