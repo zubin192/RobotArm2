@@ -12,7 +12,6 @@ from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
-import HiwonderSDK.Board as Board
 
 range_rgb = {
     'red': (0, 0, 255),
@@ -30,6 +29,7 @@ class Perception:
         self.size = (640, 480)
         self.my_camera = Camera.Camera()
         self.my_camera.camera_open()
+        self.locations = {'red': None, 'blue': None, 'green': None}  # Add this line
 
     def setTargetColor(self, target_color):
         self.__target_color = target_color
@@ -54,7 +54,7 @@ class Perception:
 
     def run(self, img):
         positions = {'red': None, 'blue': None, 'green': None}
-        locations = {'red': None, 'blue': None, 'green': None}
+        self.locations = {'red': None, 'blue': None, 'green': None}  # Modify this line
         rois = {'red': None, 'blue': None, 'green': None}
         get_rois = {'red': False, 'blue': False, 'green': False}
 
@@ -93,30 +93,16 @@ class Perception:
                     world_x, world_y = convertCoordinate(img_centerx, img_centery, self.size)
 
                     positions[detect_color] = (img_centerx, img_centery)
-                    locations[detect_color] = (world_x, world_y)
+                    self.locations[detect_color] = (world_x, world_y)  # Modify this line
 
                     cv2.drawContours(img, [box], -1, range_rgb[detect_color], 2)
                     cv2.putText(img, '(' + str(world_x) + ',' + str(world_y) + ')', (min(box[0, 0], box[2, 0]), box[2, 1] - 10),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, range_rgb[detect_color], 1)
 
         print('Positions:', positions)
-        print('Locations:', locations)
+        print('Locations:', self.locations)  # Modify this line
 
         return img
-
-    def main_loop(self):
-        while True:
-            img = self.my_camera.frame
-            if img is not None:
-                frame = img.copy()
-                Frame = self.run(frame)
-                cv2.imshow('Frame', Frame)
-                key = cv2.waitKey(1)
-                if key == 27:
-                    break
-        self.my_camera.camera_close()
-        cv2.destroyAllWindows()
-
 class RoboticArm:
     def __init__(self):
         self.servo1 = 500
@@ -193,35 +179,45 @@ class RoboticArmMotionControl:
                 time.sleep(0.01)
 
 def main():
-    perception = Perception()
-    perception.start()
-
     motion_controller = RoboticArmMotionControl()
     motion_controller.robotic_arm.init_move()
     time.sleep(2)
 
     motion_controller.start()
 
+    perception = Perception()  # Instantiate the Perception class
+    perception.start()
+
+    time.sleep(1)  # Give some time for the camera to stabilize
+
     while True:
         img = perception.my_camera.frame
-        if img is not None:
-            frame = img.copy()
-            Frame = perception.run(frame)
-            cv2.imshow('Frame', Frame)
-            key = cv2.waitKey(1)
-            if key == 27:
+        img = perception.run(img)
+
+        target_position = None
+        for color, location in perception.locations.items():
+            if location is not None:
+                target_position = (location[0], location[1], 1)  # Hardcode Z to 1
                 break
 
-            # Check if object detected
-            if perception.rect is not None:
-                x, y = perception.locations['red']  # Assuming red color is the target
-                target_position = (x, y, 1)  # Assuming z-coordinate is 1
-                motion_controller.set_target_coordinates(target_position)
-                perception.rect = None
+        if target_position is not None:
+            motion_controller.set_target_coordinates(target_position)
+            time.sleep(5)
+            break
 
-    perception.my_camera.camera_close()
+        cv2.imshow("Image", img)
+        cv2.waitKey(1)
+
     cv2.destroyAllWindows()
+
+    target_location = (-15 + 0.5, 12 - 0.5, 1.5)
+    motion_controller.set_target_coordinates(None, target_location)
+    time.sleep(5)
+
     motion_controller.stop()
 
 if __name__ == '__main__':
     main()
+
+
+   
