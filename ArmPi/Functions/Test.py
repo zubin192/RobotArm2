@@ -152,6 +152,7 @@ class RoboticArmMotionControl:
             if self._is_running:
                 if self._target_coordinates and self._action_finish:
                     self._action_finish = False
+                    print("Moving arm to target coordinates:", self._target_coordinates)
                     self.robotic_arm.open_gripper()
                     result = self.robotic_arm.move_arm(self._target_coordinates, -90, -90, 0)
                     if result is not None:
@@ -161,6 +162,7 @@ class RoboticArmMotionControl:
                     self._action_finish = True
                 elif self._target_location and self._action_finish:
                     self._action_finish = False
+                    print("Moving arm to target location:", self._target_location)
                     result = self.robotic_arm.move_arm(self._target_location, -90, -90, 0)
                     if result is not None:
                         time.sleep(result[2] / 1000)
@@ -176,6 +178,7 @@ class RoboticArmMotionControl:
                     self._stop = False
                     self._is_running = False
                 time.sleep(0.01)
+
 
 def main():
     perception = Perception()
