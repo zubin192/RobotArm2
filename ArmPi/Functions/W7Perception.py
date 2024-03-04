@@ -29,6 +29,7 @@ class Perception:
         self.size = (640, 480)
         self.my_camera = Camera.Camera()
         self.my_camera.camera_open()
+        self.locations = {'red': None, 'blue': None, 'green': None}  # Add this line
 
     def setTargetColor(self, target_color):
         self.__target_color = target_color
@@ -53,7 +54,7 @@ class Perception:
 
     def run(self, img):
         positions = {'red': None, 'blue': None, 'green': None}
-        locations = {'red': None, 'blue': None, 'green': None}
+        self.locations = {'red': None, 'blue': None, 'green': None}  # Modify this line
         rois = {'red': None, 'blue': None, 'green': None}
         get_rois = {'red': False, 'blue': False, 'green': False}
 
@@ -92,14 +93,14 @@ class Perception:
                     world_x, world_y = convertCoordinate(img_centerx, img_centery, self.size)
 
                     positions[detect_color] = (img_centerx, img_centery)
-                    locations[detect_color] = (world_x, world_y)
+                    self.locations[detect_color] = (world_x, world_y)  # Modify this line
 
                     cv2.drawContours(img, [box], -1, range_rgb[detect_color], 2)
                     cv2.putText(img, '(' + str(world_x) + ',' + str(world_y) + ')', (min(box[0, 0], box[2, 0]), box[2, 1] - 10),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, range_rgb[detect_color], 1)
 
         print('Positions:', positions)
-        print('Locations:', locations)
+        print('Locations:', self.locations)  # Modify this line
 
         return img
 
