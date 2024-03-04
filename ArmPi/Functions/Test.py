@@ -1,17 +1,17 @@
 #!/usr/bin/python3
 # coding=utf8
+
 import sys
-sys.path.append('/home/pi/ArmPi/')
-import cv2
 import time
-import Camera
 import threading
-from LABConfig import *
+import cv2
+import numpy as np
+sys.path.append('/home/pi/ArmPi/')
+import HiwonderSDK.Board as Board
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
-import HiwonderSDK.Board as Board
+from Camera import Camera
 from CameraCalibration.CalibrationConfig import *
-import numpy as np
 
 range_rgb = {
     'red': (0, 0, 255),
