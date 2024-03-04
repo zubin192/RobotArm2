@@ -107,7 +107,7 @@ def main():
     time.sleep(5)
 
     # Set the target location to place the object (hardcoded)
-    target_location = (-15 + 0.5, 12 - 0.5, 1.5)
+    target_location = (-15, 12, 1.5)
     motion_controller.set_target_location(target_location)
 
     # Stop the motion controller
