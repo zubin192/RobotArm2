@@ -76,11 +76,13 @@ class RoboticArmMotionControl:
 def main():
     # Create robotic arm motion control instance
     motion_controller = RoboticArmMotionControl()
-    motion_controller.start()
 
     # Initialize arm movement
     motion_controller.robotic_arm.init_move()
     time.sleep(2)  # Wait for the arm to reach the initial position
+
+    # Start the motion controller
+    motion_controller.start()
 
     # Get the target position from the user
     x = float(input("Enter the x-coordinate: "))
@@ -88,8 +90,11 @@ def main():
     z = float(input("Enter the z-coordinate: "))
     target_position = (x, y, z)
 
-    # Move the arm to the specified position
+    # Set the target coordinates for the motion controller
     motion_controller.set_target_coordinates(target_position)
+
+    # Wait for some time to allow the arm to pick up the object
+    time.sleep(5)
 
     # Stop the motion controller
     motion_controller.stop()
