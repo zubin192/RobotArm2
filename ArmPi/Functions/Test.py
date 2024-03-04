@@ -50,11 +50,9 @@ class RoboticArmMotionControl:
         self._stop = True
         self._is_running = False
 
-    def set_target_coordinates(self, coordinates):
+    def set_target_coordinates(self, coordinates, target_location=None):
         self._target_coordinates = coordinates
-
-    def set_target_location(self, location):
-        self._target_location = location
+        self._target_location = target_location
 
     def _move(self):
         while True:
@@ -80,7 +78,9 @@ class RoboticArmMotionControl:
                     # Open gripper to release the object
                     self.robotic_arm.open_gripper()
                     time.sleep(1)  # Delay to ensure object is released
-                    self.robotic_arm.close_gripper()
+                    # Return to initial position after placing the object
+                    self.robotic_arm.init_move()
+                    time.sleep(2)  # Wait for the arm to reach the initial position
                     self._target_location = None
                     self._action_finish = True
             else:
@@ -116,7 +116,7 @@ def main():
     target_location = (-15 + 0.5, 12 - 0.5, 1.5)
 
     # Set the target location to place the object
-    motion_controller.set_target_location(target_location)
+    motion_controller.set_target_coordinates(None, target_location)
 
     # Wait for some time to allow the arm to place the object
     time.sleep(5)
