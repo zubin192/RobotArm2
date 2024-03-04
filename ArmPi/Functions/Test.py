@@ -98,7 +98,6 @@ class Perception:
                     cv2.putText(img, '(' + str(world_x) + ',' + str(world_y) + ')', (min(box[0, 0], box[2, 0]), box[2, 1] - 10),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, range_rgb[detect_color], 1)
 
-        print('Positions:', positions)
         print('Locations:', locations)
 
         return img, locations
@@ -200,12 +199,16 @@ def main():
             for color, location in locations.items():
                 if location is not None:
                     x, y = location
+                    print("Detected block location:", x, y)
                     # Move the robotic arm to pick up the block
+                    print("Moving robotic arm to pick up the block...")
                     motion_controller.set_target_coordinates((x, y, 0))
                     time.sleep(5)
                     # Move the robotic arm to place the block in the target location
+                    print("Moving robotic arm to place the block...")
                     motion_controller.set_target_coordinates(target_location)
                     time.sleep(5)
+                    print("Block placed.")
 
     perception.my_camera.camera_close()
     cv2.destroyAllWindows()
