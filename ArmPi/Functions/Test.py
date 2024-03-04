@@ -148,12 +148,14 @@ class RoboticArmMotionControl:
     def set_target_coordinates(self, coordinates, target_location=None):
         target_z = 0.5
         self._target_coordinates = (coordinates[0], coordinates[1], target_z)
+        print(f"Target coordinates set to: {self._target_coordinates}")
 
     def _move(self):
         while True:
             if self._is_running:
                 if self._target_coordinates and self._action_finish:
                     self._action_finish = False
+                    print(f"Moving arm to: {self._target_coordinates}")
                     self.robotic_arm.open_gripper()
                     result = self.robotic_arm.move_arm(self._target_coordinates, -90, -90, 0)
                     if result is not None:
