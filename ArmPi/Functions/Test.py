@@ -4,97 +4,23 @@ import sys
 sys.path.append('/home/pi/ArmPi/')
 import cv2
 import time
-import Camera
 import threading
-from LABConfig import *
+import HiwonderSDK.Board as Board
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
-import HiwonderSDK.Board as Board
+from LABConfig import *
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
-class RoboticArm:
-    def __init__(self):
-        self.servo1 = 500
-        self.AK = ArmIK()
-
-    def init_move(self):
-        Board.setBusServoPulse(1, self.servo1 - 50, 300)
-        Board.setBusServoPulse(2, 500, 500)
-        self.AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
-
-    def move_arm(self, target_position, pitch, roll, yaw):
-        return self.AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
-
-    def open_gripper(self):
-        Board.setBusServoPulse(1, self.servo1 - 280, 500)
-
-    def close_gripper(self):
-        Board.setBusServoPulse(1, self.servo1, 500)
-
-class RoboticArmMotionControl:
-    def __init__(self):
-        self._stop = False
-        self._is_running = False
-        self._thread = threading.Thread(target=self._move)
-        self._thread.setDaemon(True)
-
-        # Initialize other necessary variables for motion control
-        self._target_coordinates = None
-        self._target_location = None
-        self._action_finish = True
-        self.robotic_arm = RoboticArm()
-
-    def start(self):
-        self._stop = False
-        self._is_running = True
-        self._thread.start()
-
-    def stop(self):
-        self._stop = True
-        self._is_running = False
-
-    def set_target_coordinates(self, coordinates, target_location=None):
-        self._target_coordinates = coordinates
-        self._target_location = target_location
-
-    def _move(self):
-        while True:
-            if self._is_running:
-                if self._target_coordinates and self._action_finish:
-                    self._action_finish = False
-                    x, y, z = self._target_coordinates
-                    # Open gripper before moving to pick up the object
-                    self.robotic_arm.open_gripper()
-                    result = self.robotic_arm.move_arm((x, y, z), -90, -90, 0)
-                    if result is not None:
-                        time.sleep(result[2] / 1000)
-                    # Close gripper after picking up the object
-                    self.robotic_arm.close_gripper()
-                    self._target_coordinates = None
-                    self._action_finish = True
-                elif self._target_location and self._action_finish:
-                    self._action_finish = False
-                    x, y, z = self._target_location
-                    result = self.robotic_arm.move_arm((x, y, z), -90, -90, 0)
-                    if result is not None:
-                        time.sleep(result[2] / 1000)
-                    # Open gripper to release the object
-                    self.robotic_arm.open_gripper()
-                    time.sleep(1)  # Delay to ensure object is released
-                    # Return to initial position after placing the object
-                    self.robotic_arm.init_move()
-                    time.sleep(2)  # Wait for the arm to reach the initial position
-                    self._target_location = None
-                    self._action_finish = True
-            else:
-                if self._stop:
-                    self._stop = False
-                    self._is_running = False
-                time.sleep(0.01)
+range_rgb = {
+    'red': (0, 0, 255),
+    'blue': (255, 0, 0),
+    'green': (0, 255, 0),
+    'black': (0, 0, 0),
+    'white': (255, 255, 255),
+}
 
 class Perception:
-
     def __init__(self):
         self.__target_color = ('red', 'blue', 'green')
         self.__isRunning = False
@@ -103,15 +29,6 @@ class Perception:
         self.my_camera = Camera.Camera()
         self.my_camera.camera_open()
 
-        self.range_rgb = {
-            'red': (0, 0, 255),
-            'blue': (255, 0, 0),
-            'green': (0, 255, 0),
-            'black': (0, 0, 0),
-            'white': (255, 255, 255),
-        }
-
-        
     def setTargetColor(self, target_color):
         self.__target_color = target_color
         return (True, ())
@@ -183,36 +100,115 @@ class Perception:
         print('Positions:', positions)
         print('Locations:', locations)
 
-        return img
+        return img, locations
 
-    def main_loop(self):
+class RoboticArm:
+    def __init__(self):
+        self.servo1 = 500
+        self.AK = ArmIK()
+
+    def init_move(self):
+        Board.setBusServoPulse(1, self.servo1 - 50, 300)
+        Board.setBusServoPulse(2, 500, 500)
+        self.AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
+
+    def move_arm(self, target_position, pitch, roll, yaw):
+        return self.AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
+
+    def open_gripper(self):
+        Board.setBusServoPulse(1, self.servo1 - 280, 500)
+
+    def close_gripper(self):
+        Board.setBusServoPulse(1, self.servo1, 500)
+
+class RoboticArmMotionControl:
+    def __init__(self):
+        self._stop = False
+        self._is_running = False
+        self._thread = threading.Thread(target=self._move)
+        self._thread.setDaemon(True)
+
+        # Initialize other necessary variables for motion control
+        self._target_coordinates = None
+        self._target_location = None
+        self._action_finish = True
+        self.robotic_arm = RoboticArm()
+
+    def start(self):
+        self._stop = False
+        self._is_running = True
+        self._thread.start()
+
+    def stop(self):
+        self._stop = True
+        self._is_running = False
+
+    def set_target_coordinates(self, coordinates, target_location=None):
+        self._target_coordinates = coordinates
+        self._target_location = target_location
+
+    def _move(self):
         while True:
-            img = self.my_camera.frame
-            if img is not None:
-                frame = img.copy()
-                Frame = self.run(frame)
-                cv2.imshow('Frame', Frame)
-                key = cv2.waitKey(1)
-                if key == 27:
-                    break
-        self.my_camera.camera_close()
-        cv2.destroyAllWindows()
+            if self._is_running:
+                if self._target_coordinates and self._action_finish:
+                    self._action_finish = False
+                    self.robotic_arm.open_gripper()
+                    result = self.robotic_arm.move_arm(self._target_coordinates, -90, -90, 0)
+                    if result is not None:
+                        time.sleep(result[2] / 1000)
+                    self.robotic_arm.close_gripper()
+                    self._target_coordinates = None
+                    self._action_finish = True
+                elif self._target_location and self._action_finish:
+                    self._action_finish = False
+                    result = self.robotic_arm.move_arm(self._target_location, -90, -90, 0)
+                    if result is not None:
+                        time.sleep(result[2] / 1000)
+                    self.robotic_arm.open_gripper()
+                    time.sleep(1)
+                    self.robotic_arm.close_gripper()
+                    self.robotic_arm.init_move()
+                    time.sleep(2)
+                    self._target_location = None
+                    self._action_finish = True
+            else:
+                if self._stop:
+                    self._stop = False
+                    self._is_running = False
+                time.sleep(0.01)
 
 def main():
-    # Create robotic arm motion control instance
-    motion_controller = RoboticArmMotionControl()
-
-    # Initialize arm movement
-    motion_controller.robotic_arm.init_move()
-    time.sleep(2)  # Wait for the arm to reach the initial position
-
-    # Start the motion controller
-    motion_controller.start()
-
-    # Create perception instance
     perception = Perception()
     perception.start()
-    perception.main_loop()
+
+    motion_controller = RoboticArmMotionControl()
+    motion_controller.robotic_arm.init_move()
+
+    while True:
+        img = perception.my_camera.frame
+        if img is not None:
+            frame, locations = perception.run(img)
+            cv2.imshow('Frame', frame)
+            key = cv2.waitKey(1)
+            if key == 27:
+                break
+
+            # Specify the target location where you want to place the block
+            target_location = (-15 + 0.5, 12 - 0.5, 1.5)
+
+            for color, location in locations.items():
+                if location is not None:
+                    x, y = location
+                    # Move the robotic arm to pick up the block
+                    motion_controller.set_target_coordinates((x, y, 0))
+                    time.sleep(5)
+                    # Move the robotic arm to place the block in the target location
+                    motion_controller.set_target_coordinates(target_location)
+                    time.sleep(5)
+
+    perception.my_camera.camera_close()
+    cv2.destroyAllWindows()
+    motion_controller.stop()
 
 if __name__ == '__main__':
     main()
