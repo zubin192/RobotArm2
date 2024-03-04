@@ -64,24 +64,16 @@ class RoboticArmMotionControl:
                     self._action_finish = False
                     x, y, z = self._target_coordinates
                     result = self.robotic_arm.move_arm((x, y, z), -90, -90, 0)
-                    time.sleep(result[2] / 1000)
-                    self._gripped_object = True
+                    if result is not None:
+                        time.sleep(result[2] / 1000)
                     self._target_coordinates = None
-                    self._action_finish = True
-                elif self._gripped_object and self._target_release_coordinates and self._action_finish:
-                    self._action_finish = False
-                    x, y, z = self._target_release_coordinates
-                    result = self.robotic_arm.move_arm((x, y, z), -90, -90, 0)
-                    time.sleep(result[2] / 1000)
-                    self.robotic_arm.open_gripper()
-                    time.sleep(1)  # Wait for the gripper to open
-                    self._gripped_object = False
                     self._action_finish = True
             else:
                 if self._stop:
                     self._stop = False
                     self._is_running = False
                 time.sleep(0.01)
+
 
 def main():
     # Create robotic arm motion control instance
