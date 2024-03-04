@@ -146,8 +146,8 @@ class RoboticArmMotionControl:
         self._is_running = False
 
     def set_target_coordinates(self, coordinates, target_location=None):
-        self._target_coordinates = coordinates
-        self._target_location = target_location
+        target_z = 0.5
+        self._target_coordinates = (coordinates[0], coordinates[1], target_z)
 
     def _move(self):
         while True:
@@ -185,6 +185,9 @@ if __name__ == '__main__':
 
     perception.start()
     arm_control.start()
+
+    # Initialize the arm's position
+    arm_control.robotic_arm.init_move()
 
     while True:
         img = perception.my_camera.frame
