@@ -23,6 +23,7 @@ range_rgb = {
 
 class Perception:
     def __init__(self):
+        self.positions = {'red': None, 'blue': None, 'green': None}
         self.__target_color = ('red', 'blue', 'green')
         self.__isRunning = False
         self.rect = None
