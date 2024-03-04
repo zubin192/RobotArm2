@@ -98,9 +98,10 @@ class Perception:
                     cv2.putText(img, '(' + str(world_x) + ',' + str(world_y) + ')', (min(box[0, 0], box[2, 0]), box[2, 1] - 10),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, range_rgb[detect_color], 1)
 
+        print('Positions:', positions)
         print('Locations:', locations)
 
-        return img, locations
+        return img
 
 class RoboticArm:
     def __init__(self):
@@ -152,7 +153,6 @@ class RoboticArmMotionControl:
             if self._is_running:
                 if self._target_coordinates and self._action_finish:
                     self._action_finish = False
-                    print("Moving arm to target coordinates:", self._target_coordinates)
                     self.robotic_arm.open_gripper()
                     result = self.robotic_arm.move_arm(self._target_coordinates, -90, -90, 0)
                     if result is not None:
@@ -162,7 +162,6 @@ class RoboticArmMotionControl:
                     self._action_finish = True
                 elif self._target_location and self._action_finish:
                     self._action_finish = False
-                    print("Moving arm to target location:", self._target_location)
                     result = self.robotic_arm.move_arm(self._target_location, -90, -90, 0)
                     if result is not None:
                         time.sleep(result[2] / 1000)
@@ -179,43 +178,22 @@ class RoboticArmMotionControl:
                     self._is_running = False
                 time.sleep(0.01)
 
-
-def main():
+if __name__ == '__main__':
     perception = Perception()
-    perception.start()
+    arm_control = RoboticArmMotionControl()
 
-    motion_controller = RoboticArmMotionControl()
-    motion_controller.robotic_arm.init_move()
+    perception.start()
+    arm_control.start()
 
     while True:
         img = perception.my_camera.frame
         if img is not None:
-            frame, locations = perception.run(img)
-            cv2.imshow('Frame', frame)
-            key = cv2.waitKey(1)
-            if key == 27:
-                break
+            img = perception.run(img)
+            positions = perception.positions
 
-            # Specify the target location where you want to place the block
-            target_location = (-15 + 0.5, 12 - 0.5, 1.5)
+            for color in positions:
+                if positions[color] is not None:
+                    arm_control.set_target_coordinates(positions[color])
+                    break
 
-            for color, location in locations.items():
-                if location is not None:
-                    x, y = location
-                    print("Detected block location:", x, y)
-                    # Move the robotic arm to pick up the block
-                    print("Moving robotic arm to pick up the block...")
-                    motion_controller.set_target_coordinates((x, y, 0))
-                    time.sleep(5)
-                    # Move the robotic arm to place the block in the target location
-                    print("Moving robotic arm to place the block...")
-                    motion_controller.set_target_coordinates(target_location)
-                    time.sleep(5)
-                    print("Block placed.")
-
-    perception.my_camera.camera_close()
-    cv2.destroyAllWindows()
-    motion_controller.stop()
-
-if __name__ == '__main__':
-    main()
+        time.sleep(0.01)
