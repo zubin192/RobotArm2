@@ -13,24 +13,27 @@ import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
 
+
+
 class RoboticArm:
     def __init__(self):
         self.servo1 = 500
-        self.AK = ArmMoveIK.ArmIK()
+        self.AK = ArmIK()
 
+        
     def init_move(self):
-        HiwonderSDK.Board.setBusServoPulse(1, self.servo1 - 50, 300)
-        HiwonderSDK.Board.setBusServoPulse(2, 500, 500)
+        Board.setBusServoPulse(1, self.servo1 - 50, 300)
+        Board.setBusServoPulse(2, 500, 500)
         self.AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
     def move_arm(self, target_position, pitch, roll, yaw):
         return self.AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
 
     def open_gripper(self):
-        HiwonderSDK.Board.setBusServoPulse(1, self.servo1 - 280, 500)
+       Board.setBusServoPulse(1, self.servo1 - 280, 500)
 
     def close_gripper(self):
-        HiwonderSDK.Board.setBusServoPulse(1, self.servo1, 500)
+       Board.setBusServoPulse(1, self.servo1, 500)
 
 class PerceptionAndMotion:
     def __init__(self):
