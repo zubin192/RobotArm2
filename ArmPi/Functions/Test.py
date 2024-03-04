@@ -121,7 +121,6 @@ class RoboticArm:
 
     def close_gripper(self):
         Board.setBusServoPulse(1, self.servo1, 500)
-
 class RoboticArmMotionControl:
     def __init__(self):
         self._stop = False
@@ -197,7 +196,7 @@ def main():
         target_position = None
         for color, location in perception.locations.items():
             if location is not None:
-                target_position = (location[0], location[1], 1)  # Hardcode Z to 1
+                target_position = (location[0], location[1], 1)  
                 break
 
         if target_position is not None:
