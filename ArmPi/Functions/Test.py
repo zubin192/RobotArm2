@@ -37,9 +37,9 @@ class RoboticArmMotionControl:
 
         # Initialize other necessary variables for motion control
         self._target_coordinates = None
+        self._target_location = None
         self._action_finish = True
         self.robotic_arm = RoboticArm()
-        self._target_location = None
 
     def start(self):
         self._stop = False
@@ -69,13 +69,19 @@ class RoboticArmMotionControl:
                         time.sleep(result[2] / 1000)
                     # Close gripper after picking up the object
                     self.robotic_arm.close_gripper()
-                    # Move to the target location to place the object
-                    if self._target_location:
-                        x, y, z = self._target_location
-                        result = self.robotic_arm.move_arm((x, y, z), -90, -90, 0)
-                        if result is not None:
-                            time.sleep(result[2] / 1000)
                     self._target_coordinates = None
+                    self._action_finish = True
+                elif self._target_location and self._action_finish:
+                    self._action_finish = False
+                    x, y, z = self._target_location
+                    result = self.robotic_arm.move_arm((x, y, z), -90, -90, 0)
+                    if result is not None:
+                        time.sleep(result[2] / 1000)
+                    # Open gripper to release the object
+                    self.robotic_arm.open_gripper()
+                    time.sleep(1)  # Delay to ensure object is released
+                    self.robotic_arm.close_gripper()
+                    self._target_location = None
                     self._action_finish = True
             else:
                 if self._stop:
@@ -95,20 +101,25 @@ def main():
     motion_controller.start()
 
     # Get the target position from the user
-    x = float(input("Enter the x-coordinate: "))
-    y = float(input("Enter the y-coordinate: "))
-    z = float(input("Enter the z-coordinate: "))
+    x = float(input("Enter the x-coordinate to pick up: "))
+    y = float(input("Enter the y-coordinate to pick up: "))
+    z = float(input("Enter the z-coordinate to pick up: "))
     target_position = (x, y, z)
 
-    # Set the target coordinates for the motion controller
+    # Set the target coordinates for picking up the object
     motion_controller.set_target_coordinates(target_position)
 
     # Wait for some time to allow the arm to pick up the object
     time.sleep(5)
 
-    # Set the target location to place the object (hardcoded)
-    target_location = (-15, 12, 1.5)
+    # Hardcoded target location to place the object
+    target_location = (-15 + 0.5, 12 - 0.5, 1.5)
+
+    # Set the target location to place the object
     motion_controller.set_target_location(target_location)
+
+    # Wait for some time to allow the arm to place the object
+    time.sleep(5)
 
     # Stop the motion controller
     motion_controller.stop()
