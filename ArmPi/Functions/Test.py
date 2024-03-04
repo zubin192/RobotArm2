@@ -12,70 +12,15 @@ from ArmIK.ArmMoveIK import *
 import HiwonderSDK.Board as Board
 from CameraCalibration.CalibrationConfig import *
 import numpy as np
+import HiwonderSDK.Board as Board
 
-
-
-class RoboticArm:
-    def __init__(self):
-        self.servo1 = 500
-        self.AK = ArmIK()
-
-        
-    def init_move(self):
-        Board.setBusServoPulse(1, self.servo1 - 50, 300)
-        Board.setBusServoPulse(2, 500, 500)
-        self.AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
-
-    def move_arm(self, target_position, pitch, roll, yaw):
-        return self.AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
-
-    def open_gripper(self):
-       Board.setBusServoPulse(1, self.servo1 - 280, 500)
-
-    def close_gripper(self):
-       Board.setBusServoPulse(1, self.servo1, 500)
-
-class PerceptionAndMotion:
-    def __init__(self):
-        self._stop = False
-        self._is_running = False
-        self._thread = threading.Thread(target=self._main_loop)
-        self._thread.setDaemon(True)
-
-        self.robotic_arm = RoboticArm()
-        self.perception = Perception()
-
-    def start(self):
-        self._stop = False
-        self._is_running = True
-        self._thread.start()
-
-    def stop(self):
-        self._stop = True
-        self._is_running = False
-
-    def _main_loop(self):
-        self.perception.start()
-        while True:
-            img = self.perception.my_camera.frame
-            if img is not None:
-                frame = img.copy()
-                frame_with_detection = self.perception.run(frame)
-                cv2.imshow('Frame', frame_with_detection)
-                key = cv2.waitKey(1)
-                if key == 27:
-                    break
-                elif key == ord('p'):
-                    target_position, _ = self.perception.get_target_coordinates()
-                    self.robotic_arm.open_gripper()
-                    result = self.robotic_arm.move_arm(target_position, -90, -90, 0)
-                    if result is not None:
-                        time.sleep(result[2] / 1000)
-                    self.robotic_arm.close_gripper()
-                    self.robotic_arm.init_move()
-                    time.sleep(2)
-        self.perception.my_camera.camera_close()
-        cv2.destroyAllWindows()
+range_rgb = {
+    'red': (0, 0, 255),
+    'blue': (255, 0, 0),
+    'green': (0, 255, 0),
+    'black': (0, 0, 0),
+    'white': (255, 255, 255),
+}
 
 class Perception:
     def __init__(self):
@@ -125,14 +70,14 @@ class Perception:
         frame_gb = cv2.GaussianBlur(frame_resize, (11, 11), 11)
         frame_lab = cv2.cvtColor(frame_gb, cv2.COLOR_BGR2LAB)
 
-        for i in LABConfig.color_range:
+        for i in color_range:
             if i in self.__target_color:
                 detect_color = i
                 if get_rois[detect_color]:
                     get_rois[detect_color] = False
-                    frame_gb = self.getMaskROI(frame_gb, rois[detect_color], self.size)
+                    frame_gb = getMaskROI(frame_gb, rois[detect_color], self.size)
 
-                frame_mask = cv2.inRange(frame_lab, LABConfig.color_range[detect_color][0], LABConfig.color_range[detect_color][1])
+                frame_mask = cv2.inRange(frame_lab, color_range[detect_color][0], color_range[detect_color][1])
                 opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8))
                 closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6, 6), np.uint8))
                 contours = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
@@ -141,58 +86,142 @@ class Perception:
                     self.rect = cv2.minAreaRect(areaMaxContour)
                     box = np.int0(cv2.boxPoints(self.rect))
 
-                    rois[detect_color] = self.getROI(box)
+                    rois[detect_color] = getROI(box)
                     get_rois[detect_color] = True
 
-                    img_centerx, img_centery = self.getCenter(self.rect, rois[detect_color], self.size, LABConfig.square_length)
-                    world_x, world_y = self.convertCoordinate(img_centerx, img_centery, self.size)
+                    img_centerx, img_centery = getCenter(self.rect, rois[detect_color], self.size, square_length)
+                    world_x, world_y = convertCoordinate(img_centerx, img_centery, self.size)
 
                     positions[detect_color] = (img_centerx, img_centery)
                     locations[detect_color] = (world_x, world_y)
 
-                    cv2.drawContours(img, [box], -1, LABConfig.range_rgb[detect_color], 2)
+                    cv2.drawContours(img, [box], -1, range_rgb[detect_color], 2)
                     cv2.putText(img, '(' + str(world_x) + ',' + str(world_y) + ')', (min(box[0, 0], box[2, 0]), box[2, 1] - 10),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, LABConfig.range_rgb[detect_color], 1)
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, range_rgb[detect_color], 1)
 
         print('Positions:', positions)
         print('Locations:', locations)
 
         return img
 
-    def get_target_coordinates(self):
-        positions = {'red': None, 'blue': None, 'green': None}
-        locations = {'red': None, 'blue': None, 'green': None}
+    def main_loop(self):
+        while True:
+            img = self.my_camera.frame
+            if img is not None:
+                frame = img.copy()
+                Frame = self.run(frame)
+                cv2.imshow('Frame', Frame)
+                key = cv2.waitKey(1)
+                if key == 27:
+                    break
+        self.my_camera.camera_close()
+        cv2.destroyAllWindows()
 
-        for i in self.__target_color:
-            if positions[i] is not None:
-                return locations[i], positions[i]
-        return None, None
+class RoboticArm:
+    def __init__(self):
+        self.servo1 = 500
+        self.AK = ArmIK()
 
-    def getMaskROI(self, frame_gb, roi, size):
-        mask = np.zeros(size, np.uint8)
-        cv2.drawContours(mask, [roi], -1, (255, 255, 255), -1)
-        res = cv2.bitwise_and(frame_gb, frame_gb, mask=mask)
-        return res
+    def init_move(self):
+        Board.setBusServoPulse(1, self.servo1 - 50, 300)
+        Board.setBusServoPulse(2, 500, 500)
+        self.AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
-    def getROI(self, box):
-        roi = np.array([[min(box[:, 0]), min(box[:, 1])],
-                        [max(box[:, 0]), min(box[:, 1])],
-                        [max(box[:, 0]), max(box[:, 1])],
-                        [min(box[:, 0]), max(box[:, 1])]])
-        return roi
+    def move_arm(self, target_position, pitch, roll, yaw):
+        return self.AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
 
-    def getCenter(self, rect, roi, size, square_length):
-        center = (rect[0][0], rect[0][1])
-        return center[0], center[1]
+    def open_gripper(self):
+        Board.setBusServoPulse(1, self.servo1 - 280, 500)
 
-    def convertCoordinate(self, img_centerx, img_centery, size):
-        return img_centerx, img_centery
+    def close_gripper(self):
+        Board.setBusServoPulse(1, self.servo1, 500)
+
+class RoboticArmMotionControl:
+    def __init__(self):
+        self._stop = False
+        self._is_running = False
+        self._thread = threading.Thread(target=self._move)
+        self._thread.setDaemon(True)
+
+        # Initialize other necessary variables for motion control
+        self._target_coordinates = None
+        self._target_location = None
+        self._action_finish = True
+        self.robotic_arm = RoboticArm()
+
+    def start(self):
+        self._stop = False
+        self._is_running = True
+        self._thread.start()
+
+    def stop(self):
+        self._stop = True
+        self._is_running = False
+
+    def set_target_coordinates(self, coordinates, target_location=None):
+        self._target_coordinates = coordinates
+        self._target_location = target_location
+
+    def _move(self):
+        while True:
+            if self._is_running:
+                if self._target_coordinates and self._action_finish:
+                    self._action_finish = False
+                    self.robotic_arm.open_gripper()
+                    result = self.robotic_arm.move_arm(self._target_coordinates, -90, -90, 0)
+                    if result is not None:
+                        time.sleep(result[2] / 1000)
+                    self.robotic_arm.close_gripper()
+                    self._target_coordinates = None
+                    self._action_finish = True
+                elif self._target_location and self._action_finish:
+                    self._action_finish = False
+                    result = self.robotic_arm.move_arm(self._target_location, -90, -90, 0)
+                    if result is not None:
+                        time.sleep(result[2] / 1000)
+                    self.robotic_arm.open_gripper()
+                    time.sleep(1)
+                    self.robotic_arm.close_gripper()
+                    self.robotic_arm.init_move()
+                    time.sleep(2)
+                    self._target_location = None
+                    self._action_finish = True
+            else:
+                if self._stop:
+                    self._stop = False
+                    self._is_running = False
+                time.sleep(0.01)
 
 def main():
-    perception_and_motion = PerceptionAndMotion()
-    perception_and_motion.start()
+    perception = Perception()
+    perception.start()
+
+    motion_controller = RoboticArmMotionControl()
+    motion_controller.robotic_arm.init_move()
     time.sleep(2)
-    perception_and_motion.stop()
+
+    motion_controller.start()
+
+    while True:
+        img = perception.my_camera.frame
+        if img is not None:
+            frame = img.copy()
+            Frame = perception.run(frame)
+            cv2.imshow('Frame', Frame)
+            key = cv2.waitKey(1)
+            if key == 27:
+                break
+
+            # Check if object detected
+            if perception.rect is not None:
+                x, y = perception.locations['red']  # Assuming red color is the target
+                target_position = (x, y, 1)  # Assuming z-coordinate is 1
+                motion_controller.set_target_coordinates(target_position)
+                perception.rect = None
+
+    perception.my_camera.camera_close()
+    cv2.destroyAllWindows()
+    motion_controller.stop()
 
 if __name__ == '__main__':
     main()
