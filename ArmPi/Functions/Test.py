@@ -137,6 +137,7 @@ class RoboticArmMotionControl:
         self.robotic_arm = RoboticArm()
 
     def start(self):
+        print("Starting RoboticArmMotionControl thread")
         self._stop = False
         self._is_running = True
         self._thread.start()
@@ -151,6 +152,7 @@ class RoboticArmMotionControl:
         print(f"Target coordinates set to: {self._target_coordinates}")
 
     def _move(self):
+        print("Move method started")
         while True:
             if self._is_running:
                 if self._target_coordinates and self._action_finish:
@@ -199,6 +201,7 @@ if __name__ == '__main__':
 
             for color in positions:
                 if positions[color] is not None:
+                    print(f"Setting target coordinates for {color} object")
                     arm_control.set_target_coordinates(positions[color])
                     break
 
