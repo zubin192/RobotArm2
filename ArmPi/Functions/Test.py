@@ -1,13 +1,9 @@
-#!/usr/bin/python3
-# coding=utf8
-
-import sys
-sys.path.append('/home/pi/ArmPi/')
 import time
 import threading
-import HiwonderSDK.Board as Board
+from Perception import Perception  # Assuming Perception class is saved in Perception.py
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
+import HiwonderSDK.Board as Board
 
 class RoboticArm:
     def __init__(self):
@@ -35,11 +31,11 @@ class RoboticArmMotionControl:
         self._thread = threading.Thread(target=self._move)
         self._thread.setDaemon(True)
 
-        # Initialize other necessary variables for motion control
         self._target_coordinates = None
         self._target_location = None
         self._action_finish = True
         self.robotic_arm = RoboticArm()
+        self.perception = Perception()
 
     def start(self):
         self._stop = False
@@ -50,37 +46,29 @@ class RoboticArmMotionControl:
         self._stop = True
         self._is_running = False
 
-    def set_target_coordinates(self, coordinates, target_location=None):
-        self._target_coordinates = coordinates
-        self._target_location = target_location
-
     def _move(self):
         while True:
             if self._is_running:
                 if self._target_coordinates and self._action_finish:
                     self._action_finish = False
-                    x, y, z = self._target_coordinates
-                    # Open gripper before moving to pick up the object
+                    x, y, _ = self._target_coordinates  # Ignore Z coordinate, always set to 0.5
                     self.robotic_arm.open_gripper()
-                    result = self.robotic_arm.move_arm((x, y, z), -90, -90, 0)
+                    result = self.robotic_arm.move_arm((x, y, 0.5), -90, -90, 0)
                     if result is not None:
                         time.sleep(result[2] / 1000)
-                    # Close gripper after picking up the object
                     self.robotic_arm.close_gripper()
                     self._target_coordinates = None
                     self._action_finish = True
                 elif self._target_location and self._action_finish:
                     self._action_finish = False
-                    x, y, z = self._target_location
-                    result = self.robotic_arm.move_arm((x, y, z), -90, -90, 0)
+                    x, y, _ = self._target_location  # Ignore Z coordinate, always set to 0.5
+                    result = self.robotic_arm.move_arm((x, y, 0.5), -90, -90, 0)
                     if result is not None:
                         time.sleep(result[2] / 1000)
-                    # Open gripper to release the object
                     self.robotic_arm.open_gripper()
-                    time.sleep(1)  # Delay to ensure object is released
-                    # Return to initial position after placing the object
+                    time.sleep(1)
                     self.robotic_arm.init_move()
-                    time.sleep(2)  # Wait for the arm to reach the initial position
+                    time.sleep(2)
                     self._target_location = None
                     self._action_finish = True
             else:
@@ -90,39 +78,17 @@ class RoboticArmMotionControl:
                 time.sleep(0.01)
 
 def main():
-    # Create robotic arm motion control instance
     motion_controller = RoboticArmMotionControl()
-
-    # Initialize arm movement
     motion_controller.robotic_arm.init_move()
-    time.sleep(2)  # Wait for the arm to reach the initial position
+    time.sleep(2)
 
-    # Start the motion controller
     motion_controller.start()
+    motion_controller.perception.start()
+    motion_controller.perception.main_loop()
 
-    # Get the target position from the user
-    x = float(input("Enter the x-coordinate to pick up: "))
-    y = float(input("Enter the y-coordinate to pick up: "))
-    z = float(input("Enter the z-coordinate to pick up: "))
-    target_position = (x, y, z)
-
-    # Set the target coordinates for picking up the object
-    motion_controller.set_target_coordinates(target_position)
-
-    # Wait for some time to allow the arm to pick up the object
-    time.sleep(5)
-
-    # Hardcoded target location to place the object
-    target_location = (-15 + 0.5, 12 - 0.5, 1.5)
-
-    # Set the target location to place the object
-    motion_controller.set_target_coordinates(None, target_location)
-
-    # Wait for some time to allow the arm to place the object
-    time.sleep(5)
-
-    # Stop the motion controller
-    motion_controller.stop()
+    # The following code will be executed after the perception loop exits
+    # Assuming you have some way to get the target coordinates from Perception class
+    # and set them using motion_controller.set_target_coordinates() method
 
 if __name__ == '__main__':
     main()
