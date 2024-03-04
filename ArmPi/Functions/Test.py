@@ -20,7 +20,7 @@ class RoboticArm:
         self.AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
     def move_arm(self, target_position, pitch, roll, yaw):
-        self.AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
+        return self.AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
 
     def open_gripper(self):
         Board.setBusServoPulse(1, self.servo1 - 280, 500)
@@ -37,9 +37,7 @@ class RoboticArmMotionControl:
 
         # Initialize other necessary variables for motion control
         self._target_coordinates = None
-        self._target_release_coordinates = None
         self._action_finish = True
-        self._gripped_object = False
         self.robotic_arm = RoboticArm()
 
     def start(self):
@@ -54,18 +52,19 @@ class RoboticArmMotionControl:
     def set_target_coordinates(self, coordinates):
         self._target_coordinates = coordinates
 
-    def set_target_release_coordinates(self, coordinates):
-        self._target_release_coordinates = coordinates
-
     def _move(self):
         while True:
             if self._is_running:
                 if self._target_coordinates and self._action_finish:
                     self._action_finish = False
                     x, y, z = self._target_coordinates
+                    # Open gripper before moving to pick up the object
+                    self.robotic_arm.open_gripper()
                     result = self.robotic_arm.move_arm((x, y, z), -90, -90, 0)
                     if result is not None:
                         time.sleep(result[2] / 1000)
+                    # Close gripper after picking up the object
+                    self.robotic_arm.close_gripper()
                     self._target_coordinates = None
                     self._action_finish = True
             else:
@@ -73,7 +72,6 @@ class RoboticArmMotionControl:
                     self._stop = False
                     self._is_running = False
                 time.sleep(0.01)
-
 
 def main():
     # Create robotic arm motion control instance
@@ -85,26 +83,13 @@ def main():
     time.sleep(2)  # Wait for the arm to reach the initial position
 
     # Get the target position from the user
-    x = float(input("Enter the x-coordinate to pick up the object: "))
-    y = float(input("Enter the y-coordinate to pick up the object: "))
-    z = float(input("Enter the z-coordinate to pick up the object: "))
+    x = float(input("Enter the x-coordinate: "))
+    y = float(input("Enter the y-coordinate: "))
+    z = float(input("Enter the z-coordinate: "))
     target_position = (x, y, z)
 
-    # Move the arm to the specified position to pick up the object
+    # Move the arm to the specified position
     motion_controller.set_target_coordinates(target_position)
-
-    # Wait until the object is gripped
-    while not motion_controller._gripped_object:
-        time.sleep(0.1)
-
-    # Get the target release position from the user
-    x_release = float(input("Enter the x-coordinate to release the object: "))
-    y_release = float(input("Enter the y-coordinate to release the object: "))
-    z_release = float(input("Enter the z-coordinate to release the object: "))
-    target_release_position = (x_release, y_release, z_release)
-
-    # Move the arm to the specified release position
-    motion_controller.set_target_release_coordinates(target_release_position)
 
     # Stop the motion controller
     motion_controller.stop()
