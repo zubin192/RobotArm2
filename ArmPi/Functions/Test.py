@@ -99,8 +99,8 @@ class Perception:
                     cv2.putText(img, '(' + str(world_x) + ',' + str(world_y) + ')', (min(box[0, 0], box[2, 0]), box[2, 1] - 10),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, range_rgb[detect_color], 1)
 
-        print('Positions:', positions)
-        print('Locations:', locations)
+        #print('Positions:', positions)
+        #print('Locations:', locations)
 
         return img
 
