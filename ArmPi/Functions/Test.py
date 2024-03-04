@@ -39,6 +39,7 @@ class RoboticArmMotionControl:
         self._target_coordinates = None
         self._action_finish = True
         self.robotic_arm = RoboticArm()
+        self._target_location = None
 
     def start(self):
         self._stop = False
@@ -51,6 +52,9 @@ class RoboticArmMotionControl:
 
     def set_target_coordinates(self, coordinates):
         self._target_coordinates = coordinates
+
+    def set_target_location(self, location):
+        self._target_location = location
 
     def _move(self):
         while True:
@@ -65,6 +69,12 @@ class RoboticArmMotionControl:
                         time.sleep(result[2] / 1000)
                     # Close gripper after picking up the object
                     self.robotic_arm.close_gripper()
+                    # Move to the target location to place the object
+                    if self._target_location:
+                        x, y, z = self._target_location
+                        result = self.robotic_arm.move_arm((x, y, z), -90, -90, 0)
+                        if result is not None:
+                            time.sleep(result[2] / 1000)
                     self._target_coordinates = None
                     self._action_finish = True
             else:
@@ -95,6 +105,10 @@ def main():
 
     # Wait for some time to allow the arm to pick up the object
     time.sleep(5)
+
+    # Set the target location to place the object (hardcoded)
+    target_location = (-15 + 0.5, 12 - 0.5, 1.5)
+    motion_controller.set_target_location(target_location)
 
     # Stop the motion controller
     motion_controller.stop()
