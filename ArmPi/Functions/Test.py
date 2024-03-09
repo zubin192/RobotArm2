@@ -41,7 +41,9 @@ class Perception:
                     with self.lock:
                         cv2.circle(frame, ((x1 + x2) // 2, (y1 + y2) // 2), (x2 - x1) // 2, (0, 255, 0), 2)  # Draw a green circle
                 
-                cv2.imshow('Frame', frame)
+                frame_blurred = self.blur_outside_roi(frame, black_circle_bbox)
+                cv2.imshow('Frame', frame_blurred)
+                
                 key = cv2.waitKey(1)
                 if key == 27:
                     break
@@ -72,6 +74,17 @@ class Perception:
             with self.lock:
                 cv2.circle(frame, ((x1 + x2) // 2, (y1 + y2) // 2), (x2 - x1) // 2, (0, 255, 0), 2)  # Draw a green circle
         self.frame_processed = True
+
+    def blur_outside_roi(self, frame, roi_bbox):
+        if roi_bbox is None:
+            return frame
+        
+        x1, y1, x2, y2 = roi_bbox
+        mask = np.zeros(frame.shape[:2], dtype=np.uint8)
+        mask[y1:y2, x1:x2] = 255
+        blurred_frame = cv2.blur(frame, (25, 25))  # Apply blur to the entire frame
+        frame[mask == 0] = blurred_frame[mask == 0]  # Replace pixels outside ROI with blurred pixels
+        return frame
 
 if __name__ == '__main__':
     perception = Perception()
