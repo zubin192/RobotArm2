@@ -6,7 +6,7 @@ import time
 
 class Perception:
     def __init__(self):
-        self.size =  self.size = (320, 240)  # Further reduced resolution
+        self.size = (320, 240)  # Further reduced resolution
         self.cap = cv2.VideoCapture(0)  # Open the default camera
         self.scale_factor = 0.25  # Scale factor for resizing
         self.skip_frames = 2  # Skip every other frame
@@ -21,7 +21,7 @@ class Perception:
         return frame_resized, frame_threshold
 
     def detect_black_circle(self, frame):
-        circles = cv2.HoughCircles(frame, cv2.HOUGH_GRADIENT, dp=1, minDist=30, param1=50, param2=30, minRadius=5, maxRadius=50)
+        circles = cv2.HoughCircles(frame, cv2.HOUGH_GRADIENT, dp=1, minDist=30, param1=50, param2=20, minRadius=5, maxRadius=50)
         
         if circles is not None:
             circles = np.uint16(np.around(circles))
