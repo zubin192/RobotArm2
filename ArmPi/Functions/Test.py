@@ -13,9 +13,15 @@ class Perception:
         self.frame_processed = True
         self.lock = threading.Lock()
 
+    def preprocess_frame(self, frame):
+        frame_resized = cv2.resize(frame, self.size, interpolation=cv2.INTER_AREA)
+        frame_gray = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2GRAY)
+        _, frame_threshold = cv2.threshold(frame_gray, 30, 255, cv2.THRESH_BINARY)  # Threshold to detect the black dot
+        frame_threshold = cv2.morphologyEx(frame_threshold, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))  # Morphological closing to fill gaps
+        return frame_resized, frame_threshold
+
     def detect_black_circle(self, frame):
-        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        circles = cv2.HoughCircles(frame_gray, cv2.HOUGH_GRADIENT, dp=1, minDist=30, param1=50, param2=30, minRadius=10, maxRadius=100)
+        circles = cv2.HoughCircles(frame, cv2.HOUGH_GRADIENT, dp=1, minDist=30, param1=50, param2=30, minRadius=5, maxRadius=50)
         
         if circles is not None:
             circles = np.uint16(np.around(circles))
@@ -29,8 +35,8 @@ class Perception:
         while True:
             ret, frame = self.cap.read()
             if ret:
-                frame_resized = cv2.resize(frame, self.size, interpolation=cv2.INTER_AREA)
-                black_circle_bbox = self.detect_black_circle(frame_resized)
+                frame_resized, frame_threshold = self.preprocess_frame(frame)
+                black_circle_bbox = self.detect_black_circle(frame_threshold)
                 
                 if black_circle_bbox:
                     x1, y1, x2, y2 = black_circle_bbox
@@ -39,10 +45,9 @@ class Perception:
                     x2 = int(x2 / self.scale_factor)
                     y2 = int(y2 / self.scale_factor)
                     with self.lock:
-                        cv2.circle(frame, ((x1 + x2) // 2, (y1 + y2) // 2), (x2 - x1) // 2, (0, 255, 0), 2)  # Draw a green circle
+                        cv2.circle(frame_resized, ((x1 + x2) // 2, (y1 + y2) // 2), (x2 - x1) // 2, (0, 255, 0), 2)  # Draw a green circle
                 
-                frame_blurred = self.blur_outside_roi(frame, black_circle_bbox)
-                cv2.imshow('Frame', frame_blurred)
+                cv2.imshow('Frame', frame_resized)
                 
                 key = cv2.waitKey(1)
                 if key == 27:
@@ -62,8 +67,8 @@ class Perception:
                 time.sleep(0.001)  # Sleep briefly to reduce CPU usage
 
     def process_frame(self, frame):
-        frame_resized = cv2.resize(frame, self.size, interpolation=cv2.INTER_AREA)
-        black_circle_bbox = self.detect_black_circle(frame_resized)
+        frame_resized, frame_threshold = self.preprocess_frame(frame)
+        black_circle_bbox = self.detect_black_circle(frame_threshold)
         
         if black_circle_bbox:
             x1, y1, x2, y2 = black_circle_bbox
@@ -72,19 +77,8 @@ class Perception:
             x2 = int(x2 / self.scale_factor)
             y2 = int(y2 / self.scale_factor)
             with self.lock:
-                cv2.circle(frame, ((x1 + x2) // 2, (y1 + y2) // 2), (x2 - x1) // 2, (0, 255, 0), 2)  # Draw a green circle
+                cv2.circle(frame_resized, ((x1 + x2) // 2, (y1 + y2) // 2), (x2 - x1) // 2, (0, 255, 0), 2)  # Draw a green circle
         self.frame_processed = True
-
-    def blur_outside_roi(self, frame, roi_bbox):
-        if roi_bbox is None:
-            return frame
-        
-        x1, y1, x2, y2 = roi_bbox
-        mask = np.zeros(frame.shape[:2], dtype=np.uint8)
-        mask[y1:y2, x1:x2] = 255
-        blurred_frame = cv2.blur(frame, (25, 25))  # Apply blur to the entire frame
-        frame[mask == 0] = blurred_frame[mask == 0]  # Replace pixels outside ROI with blurred pixels
-        return frame
 
 if __name__ == '__main__':
     perception = Perception()
