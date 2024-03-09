@@ -16,7 +16,7 @@ class Perception:
         if contours:
             contour_area_max = max(contours, key=cv2.contourArea)
             x, y, w, h = cv2.boundingRect(contour_area_max)
-            return (x + w // 2, y + h // 2)
+            return (x, y, x + w, y + h)  # Return coordinates of the bounding box
         else:
             return None
 
@@ -24,9 +24,11 @@ class Perception:
         while True:
             ret, frame = self.my_camera.read()
             if ret:
-                drink_can_pos = self.detect_drink_can(frame)
-                if drink_can_pos:
-                    print("Drink can found at coordinates:", drink_can_pos)
+                drink_can_bbox = self.detect_drink_can(frame)
+                if drink_can_bbox:
+                    x1, y1, x2, y2 = drink_can_bbox
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Draw a green bounding box
+                    print("Drink can found at coordinates:", (x1 + x2) // 2, (y1 + y2) // 2)
                 else:
                     print("Drink can not found in the frame.")
                 
