@@ -6,7 +6,7 @@ import time
 
 class Perception:
     def __init__(self):
-        self.size = (160, 120)  # Further reduced resolution
+        self.size =  self.size = (320, 240)  # Further reduced resolution
         self.cap = cv2.VideoCapture(0)  # Open the default camera
         self.scale_factor = 0.25  # Scale factor for resizing
         self.skip_frames = 2  # Skip every other frame
