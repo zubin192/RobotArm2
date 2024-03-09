@@ -3,7 +3,7 @@
 import sys
 import cv2
 import numpy as np
-import Camera from ArmPi.Functions import Camera
+import Camera
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
 
