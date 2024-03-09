@@ -6,18 +6,18 @@ class Perception:
     def __init__(self):
         self.size = (640, 480)
         self.my_camera = cv2.VideoCapture(0)  # Assuming camera index 0
-        # Define a wider range to capture various shades of white
-        self.white_color_range = {'lower': np.array([0, 0, 200]), 'upper': np.array([180, 50, 255])}
+        # Define parameters for detecting circles
+        self.circle_detection_params = dict(dp=1, minDist=20, param1=50, param2=30, minRadius=10, maxRadius=100)
 
-    def detect_white_object(self, frame):
-        frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(frame_hsv, self.white_color_range['lower'], self.white_color_range['upper'])
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    def detect_black_circle(self, frame):
+        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        circles = cv2.HoughCircles(frame_gray, cv2.HOUGH_GRADIENT, **self.circle_detection_params)
         
-        if contours:
-            contour_area_max = max(contours, key=cv2.contourArea)
-            x, y, w, h = cv2.boundingRect(contour_area_max)
-            return (x, y, x + w, y + h)  # Return coordinates of the bounding box
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for circle in circles[0, :]:
+                x, y, r = circle
+                return (x - r, y - r, x + r, y + r)  # Return coordinates of the bounding box of the circle
         else:
             return None
 
@@ -25,13 +25,13 @@ class Perception:
         while True:
             ret, frame = self.my_camera.read()
             if ret:
-                white_obj_bbox = self.detect_white_object(frame)
-                if white_obj_bbox:
-                    x1, y1, x2, y2 = white_obj_bbox
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Draw a green bounding box
-                    print("White object found at coordinates:", (x1 + x2) // 2, (y1 + y2) // 2)
+                black_circle_bbox = self.detect_black_circle(frame)
+                if black_circle_bbox:
+                    x1, y1, x2, y2 = black_circle_bbox
+                    cv2.circle(frame, ((x1 + x2) // 2, (y1 + y2) // 2), (x2 - x1) // 2, (0, 255, 0), 2)  # Draw a green circle
+                    print("Black circle found at center coordinates:", (x1 + x2) // 2, (y1 + y2) // 2)
                 else:
-                    print("White object not found in the frame.")
+                    print("Black circle not found in the frame.")
                 
                 cv2.imshow('Frame', frame)
                 key = cv2.waitKey(1)
