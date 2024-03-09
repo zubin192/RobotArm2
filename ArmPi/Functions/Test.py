@@ -1,25 +1,11 @@
 #!/usr/bin/python3
-# coding=utf8
-import sys
-sys.path.append('/home/pi/ArmPi/')
 import cv2
-import time
-import Camera
-import threading
-from LABConfig import *
-from ArmIK.Transform import *
-from ArmIK.ArmMoveIK import *
-import HiwonderSDK.Board as Board
-from CameraCalibration.CalibrationConfig import *
 import numpy as np
-
 
 class Perception:
     def __init__(self):
         self.size = (640, 480)
-        self.my_camera = Camera.Camera()
-        self.my_camera.camera_open()
-        self.locations = {'black_circle': None}
+        self.cap = cv2.VideoCapture(0)  # Open the default camera
 
     def detect_black_circle(self, frame):
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -33,31 +19,29 @@ class Perception:
         else:
             return None
 
-    def run(self, img):
-        self.locations = {'black_circle': None}
-        
-        frame_resize = cv2.resize(img, self.size, interpolation=cv2.INTER_NEAREST)
-        black_circle_bbox = self.detect_black_circle(frame_resize)
+    def run(self, frame):
+        black_circle_bbox = self.detect_black_circle(frame)
         
         if black_circle_bbox:
             x1, y1, x2, y2 = black_circle_bbox
-            cv2.circle(img, ((x1 + x2) // 2, (y1 + y2) // 2), (x2 - x1) // 2, (0, 255, 0), 2)  # Draw a green circle
-            world_x, world_y = convertCoordinate((x1 + x2) // 2, (y1 + y2) // 2, self.size)
-            self.locations['black_circle'] = (world_x, world_y)
+            cv2.circle(frame, ((x1 + x2) // 2, (y1 + y2) // 2), (x2 - x1) // 2, (0, 255, 0), 2)  # Draw a green circle
+            # Assume convertCoordinate is defined somewhere
+            # world_x, world_y = convertCoordinate((x1 + x2) // 2, (y1 + y2) // 2, self.size)
+            # self.locations['black_circle'] = (world_x, world_y)
 
-        return img
+        return frame
 
     def main_loop(self):
         while True:
-            img = self.my_camera.frame
-            if img is not None:
-                frame = img.copy()
-                Frame = self.run(frame)
-                cv2.imshow('Frame', Frame)
+            ret, frame = self.cap.read()
+            if ret:
+                frame = self.run(frame)
+                cv2.imshow('Frame', frame)
                 key = cv2.waitKey(1)
                 if key == 27:
                     break
-        self.my_camera.camera_close()
+        
+        self.cap.release()
         cv2.destroyAllWindows()
 
 if __name__ == '__main__':
