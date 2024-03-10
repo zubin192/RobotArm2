@@ -32,13 +32,14 @@ def main():
     robotic_arm.init_move()
     time.sleep(2)
 
-    x = float(input("Enter the x-coordinate to move to: "))
-    y = float(input("Enter the y-coordinate to move to: "))
-    z = float(input("Enter the z-coordinate to move to: "))
-    target_position = (x, y, z)
+    while True:
+        x = float(input("Enter the x-coordinate to move to: "))
+        y = float(input("Enter the y-coordinate to move to: "))
+        z = float(input("Enter the z-coordinate to move to: "))
+        target_position = (x, y, z)
 
-    robotic_arm.move_arm(target_position)
-    time.sleep(5)
+        robotic_arm.move_arm(target_position)
+        time.sleep(5)
 
 if __name__ == '__main__':
     main()
