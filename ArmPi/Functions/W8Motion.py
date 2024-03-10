@@ -50,10 +50,6 @@ class RoboticArmMotionControl:
         self._stop = True
         self._is_running = False
 
-    def set_target_coordinates(self, coordinates, target_location=None):
-        self._target_coordinates = coordinates
-        self._target_location = target_location
-
     def _move(self):
         while True:
             if self._is_running:
@@ -95,13 +91,6 @@ def main():
     y = float(input("Enter the y-coordinate to pick up: "))
     z = float(input("Enter the z-coordinate to pick up: "))
     target_position = (x, y, z)
-
-    motion_controller.set_target_coordinates(target_position)
-    time.sleep(5)
-
-    target_location = (-15 + 0.5, 12 - 0.5, 1.5)
-    motion_controller.set_target_coordinates(None, target_location)
-    time.sleep(5)
 
     motion_controller.stop()
 
