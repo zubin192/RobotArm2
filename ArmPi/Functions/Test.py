@@ -65,7 +65,7 @@ class RoboticArmMotionControl:
                     self._action_finish = False
                     self.robotic_arm.open_gripper()
                     result = self.robotic_arm.move_arm(self._target_coordinates, *self._target_angles)
-                    time.sleep(result[3] / 1000)
+                    time.sleep(1000)
                     self.robotic_arm.close_gripper()
                     self._target_coordinates = None
                     self._action_finish = True
