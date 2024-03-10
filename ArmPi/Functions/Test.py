@@ -43,12 +43,12 @@ def main():
 
     def change_coordinates(e):
         nonlocal x, y, z
-        if e.name == 'w': x += 100
-        elif e.name == 's': x -= 100
-        elif e.name == 'a': y += 100
-        elif e.name == 'd': y -= 100
-        elif e.name == 'q': z += 100
-        elif e.name == 'e': z -= 100
+        if e.name == 'w': x += 1000
+        elif e.name == 's': x -= 1000
+        elif e.name == 'a': y += 1000
+        elif e.name == 'd': y -= 1000
+        elif e.name == 'q': z += 1000
+        elif e.name == 'e': z -= 1000
 
         target_position = (x, y, z)
         robotic_arm.move_arm(target_position)
