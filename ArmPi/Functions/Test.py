@@ -1,57 +1,108 @@
 import sys
 sys.path.append('/home/pi/ArmPi/')
-import cv2
-import Camera
-from LABConfig import *
+import time
+import threading
+import HiwonderSDK.Board as Board
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
-import HiwonderSDK.Board as Board
-from CameraCalibration.CalibrationConfig import *
 
-class CircleDetector:
+class RoboticArm:
     def __init__(self):
-        self.target_color = 'black'
-        self.camera = Camera.Camera()
-        self.camera.camera_open()
-        self.size = (640, 480)
+        self.servo1 = 500
+        self.AK = ArmIK()
 
-    def process_frame(self, frame):
-        frame_resize = cv2.resize(frame, self.size, interpolation=cv2.INTER_NEAREST)
-        frame_gb = cv2.GaussianBlur(frame_resize, (11, 11), 11)
-        frame_lab = cv2.cvtColor(frame_gb, cv2.COLOR_BGR2LAB)
-        return frame_lab
+    def init_move(self):
+        Board.setBusServoPulse(1, self.servo1 - 50, 300)
+        Board.setBusServoPulse(2, 500, 500)
+        self.AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
-    def draw_circles(self, frame, frame_lab):
-        frame_mask = cv2.inRange(frame_lab, color_range[self.target_color][0], color_range[self.target_color][1])
-        opened = cv2.morphologyEx(frame_mask, cv2.MORPH_OPEN, np.ones((6, 6), np.uint8))
-        closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, np.ones((6, 6), np.uint8))
-        circles = cv2.HoughCircles(closed, cv2.HOUGH_GRADIENT, dp=1, minDist=100, param1=70, param2=20, minRadius=50, maxRadius=400)
+    def move_arm_to_xyz(self, target_position):
+        # Calculate inverse kinematics solution for XYZ coordinates
+        result = self.AK.setPitchTarget(target_position)
+        if result is not None:
+            time.sleep(result[2] / 1000)
+            return True
+        else:
+            return False
 
+    def open_gripper(self):
+        Board.setBusServoPulse(1, self.servo1 - 280, 500)
 
-        if circles is not None:
-            circles = np.uint16(np.around(circles))
-            for i in circles[0, :]:
-                center_x, center_y = convertCoordinate(i[0], i[1], self.size)
-                cv2.circle(frame, (i[0], i[1]), i[2], (0, 255, 0), 2)
-                cv2.circle(frame, (i[0], i[1]), 2, (0, 0, 255), 3)
-                cv2.putText(frame, self.target_color, (i[0], i[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 1)
-                cv2.putText(frame, f'x: {center_x:.2f}, y: {center_y:.2f}', (i[0], i[1] - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 1)
+    def close_gripper(self):
+        Board.setBusServoPulse(1, self.servo1, 500)
 
-    def run(self):
+class RoboticArmMotionControl:
+    def __init__(self):
+        self._stop = False
+        self._is_running = False
+        self._thread = threading.Thread(target=self._move)
+        self._thread.setDaemon(True)
+
+        # Initialize other necessary variables for motion control
+        self._target_coordinates = None
+        self._target_location = None
+        self._action_finish = True
+        self.robotic_arm = RoboticArm()
+
+    def start(self):
+        self._stop = False
+        self._is_running = True
+        self._thread.start()
+
+    def stop(self):
+        self._stop = True
+        self._is_running = False
+
+    def set_target_coordinates(self, coordinates, target_location=None):
+        self._target_coordinates = coordinates
+        self._target_location = target_location
+
+    def _move(self):
         while True:
-            img = self.camera.frame
-            if img is not None:
-                frame = img.copy()
-                frame_lab = self.process_frame(frame)
-                self.draw_circles(frame, frame_lab)
-                cv2.imshow('Frame', frame)
-                key = cv2.waitKey(1)
-                if key == 27:  # ESC key to break
-                    break
+            if self._is_running:
+                if self._target_coordinates and self._action_finish:
+                    self._action_finish = False
+                    self.robotic_arm.open_gripper()
+                    if self.robotic_arm.move_arm_to_xyz(self._target_coordinates):
+                        self.robotic_arm.close_gripper()
+                    self._target_coordinates = None
+                    self._action_finish = True
+                elif self._target_location and self._action_finish:
+                    self._action_finish = False
+                    if self.robotic_arm.move_arm_to_xyz(self._target_location):
+                        self.robotic_arm.open_gripper()
+                        time.sleep(1)
+                        self.robotic_arm.close_gripper()
+                        self.robotic_arm.init_move()
+                        time.sleep(2)
+                    self._target_location = None
+                    self._action_finish = True
+            else:
+                if self._stop:
+                    self._stop = False
+                    self._is_running = False
+                time.sleep(0.01)
 
-        self.camera.camera_close()
-        cv2.destroyAllWindows()
+def main():
+    motion_controller = RoboticArmMotionControl()
+    motion_controller.robotic_arm.init_move()
+    time.sleep(2)
+
+    motion_controller.start()
+
+    x = float(input("Enter the x-coordinate to point to: "))
+    y = float(input("Enter the y-coordinate to point to: "))
+    z = float(input("Enter the z-coordinate to point to: "))
+    target_position = (x, y, z)
+
+    motion_controller.set_target_coordinates(target_position)
+    time.sleep(5)
+
+    target_location = (-15 + 0.5, 12 - 0.5, 1.5)
+    motion_controller.set_target_coordinates(None, target_location)
+    time.sleep(5)
+
+    motion_controller.stop()
 
 if __name__ == '__main__':
-    detector = CircleDetector()
-    detector.run()
+    main()
