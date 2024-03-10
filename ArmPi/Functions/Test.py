@@ -41,18 +41,26 @@ def main():
 
     x, y, z = 0, 0, 0
 
-    while True:
-        if keyboard.is_pressed('w'): x += 100
-        elif keyboard.is_pressed('s'): x -= 100
-        elif keyboard.is_pressed('a'): y += 100
-        elif keyboard.is_pressed('d'): y -= 100
-        elif keyboard.is_pressed('q'): z += 100
-        elif keyboard.is_pressed('e'): z -= 100
-        elif keyboard.is_pressed('esc'): break
+    def change_coordinates(e):
+        nonlocal x, y, z
+        if e.name == 'w': x += 100
+        elif e.name == 's': x -= 100
+        elif e.name == 'a': y += 100
+        elif e.name == 'd': y -= 100
+        elif e.name == 'q': z += 100
+        elif e.name == 'e': z -= 100
 
         target_position = (x, y, z)
         robotic_arm.move_arm(target_position)
-        time.sleep(0.1)
+
+    keyboard.on_press_key("w", change_coordinates)
+    keyboard.on_press_key("s", change_coordinates)
+    keyboard.on_press_key("a", change_coordinates)
+    keyboard.on_press_key("d", change_coordinates)
+    keyboard.on_press_key("q", change_coordinates)
+    keyboard.on_press_key("e", change_coordinates)
+
+    keyboard.wait('esc')
 
 if __name__ == '__main__':
     main()
