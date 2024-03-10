@@ -2,8 +2,9 @@
 # coding=utf8
 
 import sys
-sys.path.append('/home/pi/ArmPi/')
 import time
+import keyboard
+sys.path.append('/home/pi/ArmPi/')
 import HiwonderSDK.Board as Board
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
@@ -32,14 +33,26 @@ def main():
     robotic_arm.init_move()
     time.sleep(2)
 
-    while True:
-        x = float(input("Enter the x-coordinate to move to: "))
-        y = float(input("Enter the y-coordinate to move to: "))
-        z = float(input("Enter the z-coordinate to move to: "))
-        target_position = (x, y, z)
+    print("Control the arm using the keyboard:")
+    print("w/s: Increase/decrease x-coordinate")
+    print("a/d: Increase/decrease y-coordinate")
+    print("q/e: Increase/decrease z-coordinate")
+    print("Press 'esc' to exit")
 
+    x, y, z = 0, 0, 0
+
+    while True:
+        if keyboard.is_pressed('w'): x += 1
+        elif keyboard.is_pressed('s'): x -= 1
+        elif keyboard.is_pressed('a'): y += 1
+        elif keyboard.is_pressed('d'): y -= 1
+        elif keyboard.is_pressed('q'): z += 1
+        elif keyboard.is_pressed('e'): z -= 1
+        elif keyboard.is_pressed('esc'): break
+
+        target_position = (x, y, z)
         robotic_arm.move_arm(target_position)
-        time.sleep(5)
+        time.sleep(0.1)
 
 if __name__ == '__main__':
     main()
