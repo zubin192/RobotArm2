@@ -19,15 +19,6 @@ class RoboticArm:
         Board.setBusServoPulse(2, 500, 500)
         self.AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
-    def move_arm(self, target_position, pitch, roll, yaw):
-        return self.AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
-
-    def open_gripper(self):
-        Board.setBusServoPulse(1, self.servo1 - 280, 500)
-
-    def close_gripper(self):
-        Board.setBusServoPulse(1, self.servo1, 500)
-
 class RoboticArmMotionControl:
     def __init__(self):
         self._stop = False
@@ -95,13 +86,6 @@ def main():
     y = float(input("Enter the y-coordinate to pick up: "))
     z = float(input("Enter the z-coordinate to pick up: "))
     target_position = (x, y, z)
-
-    motion_controller.set_target_coordinates(target_position)
-    time.sleep(5)
-
-    target_location = (-15 + 0.5, 12 - 0.5, 1.5)
-    motion_controller.set_target_coordinates(None, target_location)
-    time.sleep(5)
 
     motion_controller.stop()
 
