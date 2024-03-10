@@ -42,12 +42,12 @@ def main():
     x, y, z = 0, 0, 0
 
     while True:
-        if keyboard.is_pressed('w'): x += 10
-        elif keyboard.is_pressed('s'): x -= 10
-        elif keyboard.is_pressed('a'): y += 10
-        elif keyboard.is_pressed('d'): y -= 10
-        elif keyboard.is_pressed('q'): z += 10
-        elif keyboard.is_pressed('e'): z -= 10
+        if keyboard.is_pressed('w'): x += 100
+        elif keyboard.is_pressed('s'): x -= 100
+        elif keyboard.is_pressed('a'): y += 100
+        elif keyboard.is_pressed('d'): y -= 100
+        elif keyboard.is_pressed('q'): z += 100
+        elif keyboard.is_pressed('e'): z -= 100
         elif keyboard.is_pressed('esc'): break
 
         target_position = (x, y, z)
