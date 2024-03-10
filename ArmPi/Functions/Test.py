@@ -16,7 +16,7 @@ class RoboticArm:
     def init_move(self):
         Board.setBusServoPulse(1, self.servo1 - 50, 300)
         Board.setBusServoPulse(2, 500, 500)
-        self.AK.setPitchRangeMoving((0, 10, 10), -30, 0, -90, 1500)
+        self.AK.setPitchRangeMoving((0, 10, 10), -30, 0, 90, 1500)
 
     def move_arm(self, target_position):
         return self.AK.setPitchRangeMoving(target_position, -90, -90, 0, 1500)
