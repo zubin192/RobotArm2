@@ -18,7 +18,7 @@ class RoboticArm:
 
     def move_arm_to_xyz(self, target_position):
         # Calculate inverse kinematics solution for XYZ coordinates
-        result = self.AK.setPitchTarget(target_position)
+        result = self.AK.setPitchTargetPos(target_position)
         if result is not None:
             time.sleep(result[2] / 1000)
             return True
