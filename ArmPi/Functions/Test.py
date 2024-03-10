@@ -20,7 +20,11 @@ class RoboticArm:
         self.AK.setPitchRangeMoving((0, 10, 10), -30, -30, -90, 1500)
 
     def move_arm(self, target_position, pitch, roll, yaw):
-        return self.AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
+        result = self.AK.setPitchRangeMoving(target_position, pitch, roll, yaw, 1500)
+        if result is not None:
+            return result
+        else:
+            return (0, 0, 0, 0)  # Return a default value if no result is returned
 
     def open_gripper(self):
         Board.setBusServoPulse(1, self.servo1 - 280, 500)
@@ -61,8 +65,7 @@ class RoboticArmMotionControl:
                     self._action_finish = False
                     self.robotic_arm.open_gripper()
                     result = self.robotic_arm.move_arm(self._target_coordinates, *self._target_angles)
-                    if result is not None:
-                        time.sleep(result[2] / 1000)
+                    time.sleep(result[3] / 1000)
                     self.robotic_arm.close_gripper()
                     self._target_coordinates = None
                     self._action_finish = True
